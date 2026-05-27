@@ -10,6 +10,7 @@
   export let scene: LoadedScene | null;
   export let tint: string;
   export let alertEvent: { id: number } | null;
+  export let alwaysOnTop: boolean;
 
   export let actions: {
     onStart: () => void;
@@ -19,6 +20,7 @@
     onExtend: () => void;
     onReset: () => void;
     onToggleMode: () => void;
+    onToggleAlwaysOnTop: () => void;
     onOpenSettings: () => void;
     onOpenHistory: () => void;
   };
@@ -56,6 +58,15 @@
   </div>
 
   <div class="corner-actions">
+    <button
+      class="icon"
+      class:active={alwaysOnTop}
+      on:click={actions.onToggleAlwaysOnTop}
+      aria-label={alwaysOnTop ? "Unpin (allow other windows above)" : "Pin always on top"}
+      aria-pressed={alwaysOnTop}
+    >
+      📌
+    </button>
     <button class="icon" on:click={actions.onToggleMode} aria-label="Compact mode">⛶</button>
     <button class="icon" on:click={actions.onOpenHistory} aria-label="History">📊</button>
     <button class="icon" on:click={actions.onOpenSettings} aria-label="Settings">⚙</button>
@@ -64,10 +75,11 @@
   <div
     class="clock-slot"
     style="
-      left: {(clockPos.x - clockPos.diameter / 2) * 100}%;
-      top: {(clockPos.y - clockPos.diameter / 2) * 100}%;
-      width: {clockPos.diameter * 100}%;
-      aspect-ratio: 1 / 1;
+      --clock-d: clamp(120px, {clockPos.diameter * 100}vmin, 320px);
+      left: calc({clockPos.x * 100}% - var(--clock-d) / 2);
+      top: calc({clockPos.y * 100}% - var(--clock-d) / 2);
+      width: var(--clock-d);
+      height: var(--clock-d);
     "
   >
     <WallClock
@@ -158,6 +170,14 @@
   }
   .corner-actions .icon:hover {
     background: rgba(20, 15, 12, 0.8);
+  }
+  .corner-actions .icon.active {
+    background: #c97a5a;
+    border-color: #c97a5a;
+    color: #1a0f0a;
+  }
+  .corner-actions .icon.active:hover {
+    background: #d68866;
   }
   .clock-slot {
     position: absolute;

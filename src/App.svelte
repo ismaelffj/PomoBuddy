@@ -48,9 +48,14 @@
     durationMs = initial.durations.focus * 60_000;
     activeScene = scenes.find((sc) => sc.id === initial.scene.id) ?? scenes[0] ?? null;
 
+    let appliedAlwaysOnTop: boolean | undefined;
     settings.subscribe((s: Settings) => {
       activeScene = scenes.find((sc) => sc.id === s.scene.id) ?? scenes[0] ?? null;
       durationMs = durationForPhase(snapshot.phase, s);
+      if (s.window.alwaysOnTop !== appliedAlwaysOnTop) {
+        appliedAlwaysOnTop = s.window.alwaysOnTop;
+        void tauriPlatform.setAlwaysOnTop(s.window.alwaysOnTop);
+      }
     });
 
     const notifier = createNotifier(tauriPlatform, settings, {
@@ -115,6 +120,12 @@
       const next: Mode = $mode === "compact" ? "full" : "compact";
       await mode.setMode(next);
     },
+    onToggleAlwaysOnTop: () => {
+      settings.update((s) => ({
+        ...s,
+        window: { ...s.window, alwaysOnTop: !s.window.alwaysOnTop },
+      }));
+    },
     onOpenSettings: () => (showSettings = true),
     onOpenHistory: () => (showHistory = true),
   };
@@ -138,6 +149,7 @@
     <CompactCard
       {snapshot}
       sessionsPerLongBreak={$settings.durations.sessionsPerLongBreak}
+      alwaysOnTop={$settings.window.alwaysOnTop}
       {actions}
     />
   {:else}
@@ -148,6 +160,7 @@
       scene={activeScene}
       {tint}
       {alertEvent}
+      alwaysOnTop={$settings.window.alwaysOnTop}
       {actions}
     />
   {/if}

@@ -4,6 +4,7 @@
 
   export let snapshot: TimerSnapshot;
   export let sessionsPerLongBreak: number;
+  export let alwaysOnTop: boolean;
 
   export let actions: {
     onStart: () => void;
@@ -13,6 +14,7 @@
     onExtend: () => void;
     onReset: () => void;
     onToggleMode: () => void;
+    onToggleAlwaysOnTop: () => void;
     onOpenSettings: () => void;
   };
 
@@ -31,6 +33,15 @@
   <div class="top-row">
     <div class="pill">{phaseLabel}</div>
     <div class="corner">
+      <button
+        class="icon"
+        class:active={alwaysOnTop}
+        on:click={actions.onToggleAlwaysOnTop}
+        aria-label={alwaysOnTop ? "Unpin" : "Pin always on top"}
+        aria-pressed={alwaysOnTop}
+      >
+        📌
+      </button>
       <button class="icon" on:click={actions.onToggleMode} aria-label="Expand to full mode">
         ⛶
       </button>
@@ -96,6 +107,14 @@
   }
   .icon:hover {
     background: rgba(255, 255, 255, 0.12);
+  }
+  .icon.active {
+    background: #c97a5a;
+    border-color: #c97a5a;
+    color: #1a0f0a;
+  }
+  .icon.active:hover {
+    background: #d68866;
   }
   .time {
     font-size: 52px;
