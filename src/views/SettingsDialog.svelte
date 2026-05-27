@@ -143,7 +143,18 @@
                   scene: { ...s.scene, id: scene.id },
                 }))}
             >
-              <div class="preview" style="background: {scene.manifest.palette.primary}"></div>
+              {#if scene.manifest.preview}
+                <img
+                  class="preview"
+                  src={scene.assetUrl(scene.manifest.preview)}
+                  alt={scene.manifest.name}
+                />
+              {:else}
+                <div
+                  class="preview fallback"
+                  style="background: {scene.manifest.palette.primary}"
+                ></div>
+              {/if}
               <div class="name">{scene.manifest.name}</div>
             </button>
           {/each}
@@ -338,13 +349,20 @@
   .tile.selected {
     border-color: #c9b78a;
   }
+  .tile.selected .name {
+    color: #c9b78a;
+  }
   .tile .preview {
-    aspect-ratio: 4 / 3;
+    aspect-ratio: 8 / 5;
     border-radius: 6px;
+    width: 100%;
+    object-fit: cover;
+    display: block;
   }
   .tile .name {
-    font-size: 11px;
-    padding-top: 4px;
-    color: #8a8578;
+    font-size: 12px;
+    padding-top: 6px;
+    color: #d7d2c4;
+    text-align: center;
   }
 </style>
