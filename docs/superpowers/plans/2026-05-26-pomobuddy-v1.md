@@ -7,6 +7,7 @@
 **Architecture:** Tauri 2 (Rust) shell hosting a Svelte 5 + TypeScript UI in the macOS WebView. All app logic lives in the Svelte side; Tauri handles window, tray, notifications, and atomic filesystem operations. Scenes are user-extensible content packs validated by a Zod schema with strict path-safety checks.
 
 **Tech Stack:**
+
 - Tauri 2 (Rust shell, system WebView)
 - Svelte 5 + TypeScript + Vite (UI)
 - Zod (schema validation)
@@ -15,6 +16,7 @@
 - GitHub Actions (CI: `npm test/check/lint` + `cargo check`)
 
 **Conventions:**
+
 - TDD: failing test → minimal impl → passing test → commit. Test public behavior, not internals.
 - Frequent commits — one per task at minimum.
 - All paths in this plan are relative to the repo root: `~/Documents/Dreamwell Collective LLC/PROJECTS/PomoBuddy/`.
@@ -26,6 +28,7 @@
 ## Task 1: Project scaffold (Vite + Svelte + TypeScript + Vitest)
 
 **Files:**
+
 - Create: `package.json`, `tsconfig.json`, `tsconfig.node.json`, `svelte.config.js`, `vite.config.ts`, `vitest.config.ts`, `index.html`, `src/main.ts`, `src/App.svelte`, `src/app.css`, `.prettierrc`, `.eslintrc.cjs`
 - Modify: `.gitignore` (already exists, may need additions)
 
@@ -105,9 +108,19 @@ export default defineConfig({
 module.exports = {
   root: true,
   parser: "@typescript-eslint/parser",
-  extends: ["eslint:recommended", "plugin:@typescript-eslint/recommended", "plugin:svelte/recommended"],
+  extends: [
+    "eslint:recommended",
+    "plugin:@typescript-eslint/recommended",
+    "plugin:svelte/recommended",
+  ],
   plugins: ["@typescript-eslint"],
-  overrides: [{ files: ["*.svelte"], parser: "svelte-eslint-parser", parserOptions: { parser: "@typescript-eslint/parser" } }],
+  overrides: [
+    {
+      files: ["*.svelte"],
+      parser: "svelte-eslint-parser",
+      parserOptions: { parser: "@typescript-eslint/parser" },
+    },
+  ],
   env: { browser: true, node: true, es2022: true },
 };
 ```
@@ -156,6 +169,7 @@ git commit -m "chore: scaffold Vite + Svelte 5 + TypeScript + Vitest"
 ## Task 2: Tauri 2 init with narrow capabilities
 
 **Files:**
+
 - Create: `src-tauri/Cargo.toml`, `src-tauri/tauri.conf.json`, `src-tauri/src/main.rs`, `src-tauri/src/lib.rs`, `src-tauri/build.rs`, `src-tauri/icons/` (Tauri generates these)
 - Modify: `package.json` (Tauri adds scripts and dev dependencies)
 
@@ -173,6 +187,7 @@ npx tauri init
 ```
 
 Answer the prompts:
+
 - App name: `PomoBuddy`
 - Window title: `PomoBuddy`
 - Web assets location (relative to `src-tauri`): `../dist`
@@ -212,22 +227,14 @@ Replace the generated `tauri.conf.json` content with:
       "csp": "default-src 'self'; img-src 'self' asset: http://asset.localhost data:; media-src 'self' asset: http://asset.localhost; style-src 'self' 'unsafe-inline'; script-src 'self'",
       "assetProtocol": {
         "enable": true,
-        "scope": [
-          "$RESOURCE/scenes/**",
-          "$APPDATA/scenes/**"
-        ]
+        "scope": ["$RESOURCE/scenes/**", "$APPDATA/scenes/**"]
       }
     }
   },
   "bundle": {
     "active": true,
     "targets": "dmg",
-    "icon": [
-      "icons/32x32.png",
-      "icons/128x128.png",
-      "icons/128x128@2x.png",
-      "icons/icon.icns"
-    ],
+    "icon": ["icons/32x32.png", "icons/128x128.png", "icons/128x128@2x.png", "icons/icon.icns"],
     "resources": ["../scenes/**/*"]
   }
 }
@@ -290,6 +297,7 @@ git commit -m "chore: add Tauri 2 shell with narrow asset-protocol scope"
 ## Task 3: CI workflow
 
 **Files:**
+
 - Create: `.github/workflows/ci.yml`
 
 - [ ] **Step 1: Create the workflow file**
@@ -339,6 +347,7 @@ git commit -m "ci: add GitHub Actions for npm + cargo check"
 ## Task 4: Timer types
 
 **Files:**
+
 - Create: `src/lib/timer/timer.types.ts`
 
 - [ ] **Step 1: Define the timer types**
@@ -394,6 +403,7 @@ git commit -m "feat(timer): add timer types"
 ## Task 5: TimerEngine — wall-clock anchored core
 
 **Files:**
+
 - Create: `src/lib/timer/TimerEngine.ts`
 - Test: `tests/timer.test.ts`
 
@@ -582,6 +592,7 @@ git commit -m "feat(timer): wall-clock anchored core (start, snapshot, sleep-saf
 ## Task 6: TimerEngine — pause, resume, skip, extend, reset
 
 **Files:**
+
 - Modify: `src/lib/timer/TimerEngine.ts`
 - Modify: `tests/timer.test.ts`
 
@@ -749,6 +760,7 @@ git commit -m "feat(timer): pause/resume/skip/extend/reset + PhaseEndedEvent con
 ## Task 7: TimerEngine — long-break cycle
 
 **Files:**
+
 - Modify: `tests/timer.test.ts`
 
 - [ ] **Step 1: Add failing tests for the cycle**
@@ -842,6 +854,7 @@ git commit -m "feat(timer): long-break cycle with sessionIndex reset"
 ## Task 8: Scene types + Zod schema
 
 **Files:**
+
 - Create: `src/lib/scenes/scene.types.ts`
 - Create: `src/lib/scenes/sceneSchema.ts`
 - Test: `tests/scene-schema.test.ts`
@@ -894,7 +907,12 @@ describe("sceneSchema", () => {
       ...valid,
       timeOfDay: {
         mode: "variants",
-        variants: { morning: "morning.webp", midday: "midday.webp", dusk: "dusk.webp", night: "night.webp" },
+        variants: {
+          morning: "morning.webp",
+          midday: "midday.webp",
+          dusk: "dusk.webp",
+          night: "night.webp",
+        },
       },
     };
     expect(() => sceneSchema.parse(variants)).not.toThrow();
@@ -1025,6 +1043,7 @@ git commit -m "feat(scenes): scene manifest Zod schema with strict validation"
 ## Task 9: Scene path-safe validator
 
 **Files:**
+
 - Create: `src/lib/scenes/scenePathSafe.ts`
 - Test: `tests/scene-path-safe.test.ts`
 
@@ -1128,6 +1147,7 @@ git commit -m "feat(scenes): path-safety guard for user-supplied asset paths"
 ## Task 10: timeOfDay tint interpolation
 
 **Files:**
+
 - Create: `src/lib/scenes/timeOfDay.ts`
 - Test: `tests/time-of-day.test.ts`
 
@@ -1215,8 +1235,18 @@ function mixHex(a: string, b: string, t: number): string {
 
 function parseHex(h: string): [number, number, number] {
   const s = h.startsWith("#") ? h.slice(1) : h;
-  const full = s.length === 3 ? s.split("").map((c) => c + c).join("") : s;
-  return [parseInt(full.slice(0, 2), 16), parseInt(full.slice(2, 4), 16), parseInt(full.slice(4, 6), 16)];
+  const full =
+    s.length === 3
+      ? s
+          .split("")
+          .map((c) => c + c)
+          .join("")
+      : s;
+  return [
+    parseInt(full.slice(0, 2), 16),
+    parseInt(full.slice(2, 4), 16),
+    parseInt(full.slice(4, 6), 16),
+  ];
 }
 ```
 
@@ -1240,6 +1270,7 @@ git commit -m "feat(scenes): time-of-day tint interpolation between anchors"
 ## Task 11: Platform wrapper interface (Tauri)
 
 **Files:**
+
 - Create: `src/lib/platform/platform.types.ts`
 - Create: `src/lib/platform/tauri.ts`
 
@@ -1360,6 +1391,7 @@ git commit -m "feat(platform): Tauri-backed platform interface"
 ## Task 12: Rust commands — atomic settings write, history append
 
 **Files:**
+
 - Modify: `src-tauri/src/lib.rs` (or `main.rs` depending on Tauri 2 scaffolding)
 - Create: `src-tauri/src/commands.rs`
 
@@ -1495,6 +1527,7 @@ git commit -m "feat(shell): atomic settings write + history append commands"
 ## Task 13: SettingsStore
 
 **Files:**
+
 - Create: `src/lib/stores/settings.ts`
 - Create: `src/lib/stores/settings.types.ts`
 - Test: `tests/settings-store.test.ts`
@@ -1554,7 +1587,11 @@ function makePlatform(initial?: string): Platform {
   return {
     appDataDir: async () => "/app",
     resourceDir: async () => "/res",
-    readTextFile: async () => stored ?? (() => { throw new Error("ENOENT"); })(),
+    readTextFile: async () =>
+      stored ??
+      (() => {
+        throw new Error("ENOENT");
+      })(),
     readDir: async () => [],
     writeSettingsAtomic: async (json) => {
       writes.push(json);
@@ -1677,6 +1714,7 @@ git commit -m "feat(stores): SettingsStore with atomic write + corrupt-file fall
 ## Task 14: HistoryStore
 
 **Files:**
+
 - Create: `src/lib/stores/history.ts`
 - Test: `tests/history-store.test.ts`
 
@@ -1697,7 +1735,9 @@ function platformWithHistory(initial: string): Platform {
     readTextFile: async () => "",
     readDir: async () => [],
     writeSettingsAtomic: async () => {},
-    appendHistoryLine: async (line) => { file += line.endsWith("\n") ? line : line + "\n"; },
+    appendHistoryLine: async (line) => {
+      file += line.endsWith("\n") ? line : line + "\n";
+    },
     readHistoryFile: async () => file,
     toAssetUrl: (p) => p,
     setWindowSize: async () => {},
@@ -1726,10 +1766,9 @@ describe("HistoryStore", () => {
   });
 
   it("tolerates a truncated final line", async () => {
-    const file = [
-      focusEntry(new Date("2026-05-26T10:00:00Z").getTime()),
-      "{not valid json",
-    ].join("\n");
+    const file = [focusEntry(new Date("2026-05-26T10:00:00Z").getTime()), "{not valid json"].join(
+      "\n",
+    );
     const p = platformWithHistory(file);
     const store = await createHistoryStore(p, () => new Date("2026-05-26T12:00:00Z").getTime());
     expect(get(store).today).toBe(1);
@@ -1874,6 +1913,7 @@ git commit -m "feat(stores): HistoryStore with tolerant JSONL parsing"
 ## Task 15: SceneLoader
 
 **Files:**
+
 - Create: `src/lib/scenes/SceneLoader.ts`
 - Test: `tests/scene-loader.test.ts`
 
@@ -1895,7 +1935,10 @@ const validManifest = {
   clock: { x: 0.5, y: 0.2, diameter: 0.2, face: "warm-cream" },
   phaseTag: { x: 0.05, y: 0.05 },
   palette: { primary: "#aaa", accent: "#bbb", ink: "#000" },
-  timeOfDay: { mode: "tint", tints: { morning: "#fff", midday: "#fff", dusk: "#fff", night: "#000" } },
+  timeOfDay: {
+    mode: "tint",
+    tints: { morning: "#fff", midday: "#fff", dusk: "#fff", night: "#000" },
+  },
 };
 
 const unsafeManifest = { ...validManifest, layers: { background: "../escape.webp" } };
@@ -1952,7 +1995,9 @@ describe("SceneLoader", () => {
   it("merges bundled + user scenes", async () => {
     const platform = platformWith({
       "/res/scenes/cabin": { "scene.json": JSON.stringify(validManifest) },
-      "/app/scenes/cafe": { "scene.json": JSON.stringify({ ...validManifest, id: "cafe", name: "Cafe" }) },
+      "/app/scenes/cafe": {
+        "scene.json": JSON.stringify({ ...validManifest, id: "cafe", name: "Cafe" }),
+      },
     });
     const scenes = await loadAllScenes(platform);
     expect(scenes.map((s) => s.id).sort()).toEqual(["cabin", "cafe"]);
@@ -2047,6 +2092,7 @@ git commit -m "feat(scenes): SceneLoader scans bundled + user scenes with path s
 ## Task 16: Notifier
 
 **Files:**
+
 - Create: `src/lib/notify/Notifier.ts`
 - Test: `tests/notifier.test.ts`
 
@@ -2101,7 +2147,10 @@ describe("Notifier", () => {
     const platform = fakePlatform();
     const inApp = vi.fn();
     const chime = vi.fn();
-    const notifier = createNotifier(platform, settingsStore(), { onInAppAlert: inApp, playChime: chime });
+    const notifier = createNotifier(platform, settingsStore(), {
+      onInAppAlert: inApp,
+      playChime: chime,
+    });
     await notifier.notifyPhaseEnd(event);
     expect(platform.sendNotification).toHaveBeenCalledTimes(1);
     expect(inApp).toHaveBeenCalledTimes(1);
@@ -2205,6 +2254,7 @@ git commit -m "feat(notify): Notifier routes phase-end to enabled channels only"
 ## Task 17: Mode store + window resize
 
 **Files:**
+
 - Create: `src/lib/stores/mode.ts`
 
 - [ ] **Step 1: Implement the mode store**
@@ -2260,6 +2310,7 @@ git commit -m "feat(stores): Mode store with window resize"
 ## Task 18: WallClock Svelte component
 
 **Files:**
+
 - Create: `src/views/WallClock.svelte`
 
 - [ ] **Step 1: Implement the component**
@@ -2298,7 +2349,14 @@ git commit -m "feat(stores): Mode store with window resize"
     <line x1="0" y1="42" x2="0" y2="36" />
     <line x1="-42" y1="0" x2="-36" y2="0" />
   </g>
-  <text x="0" y="6" text-anchor="middle" font-size="14" font-family="ui-rounded, system-ui" fill="#3a2f24">
+  <text
+    x="0"
+    y="6"
+    text-anchor="middle"
+    font-size="14"
+    font-family="ui-rounded, system-ui"
+    fill="#3a2f24"
+  >
     {label}
   </text>
 </svg>
@@ -2332,6 +2390,7 @@ git commit -m "feat(ui): WallClock component"
 ## Task 19: ButtonBar Svelte component
 
 **Files:**
+
 - Create: `src/views/ButtonBar.svelte`
 
 - [ ] **Step 1: Implement the component**
@@ -2354,7 +2413,13 @@ git commit -m "feat(ui): WallClock component"
   export let onOpenHistory: (() => void) | null = null;
 
   $: primaryLabel =
-    runState === "running" ? "Pause" : runState === "paused" ? "Resume" : runState === "ended" ? "Start next" : "Start";
+    runState === "running"
+      ? "Pause"
+      : runState === "paused"
+        ? "Resume"
+        : runState === "ended"
+          ? "Start next"
+          : "Start";
 
   function primaryClick() {
     if (runState === "running") onPause();
@@ -2397,9 +2462,17 @@ git commit -m "feat(ui): WallClock component"
     cursor: pointer;
     font: inherit;
   }
-  button:hover { background: rgba(255, 255, 255, 0.14); }
-  button.primary { background: #c97a5a; color: #1a0f0a; border-color: #c97a5a; }
-  .spacer { flex: 1; }
+  button:hover {
+    background: rgba(255, 255, 255, 0.14);
+  }
+  button.primary {
+    background: #c97a5a;
+    color: #1a0f0a;
+    border-color: #c97a5a;
+  }
+  .spacer {
+    flex: 1;
+  }
 </style>
 ```
 
@@ -2416,6 +2489,7 @@ git commit -m "feat(ui): ButtonBar component"
 ## Task 20: CompactCard view
 
 **Files:**
+
 - Create: `src/views/CompactCard.svelte`
 
 - [ ] **Step 1: Implement**
@@ -2444,8 +2518,11 @@ git commit -m "feat(ui): ButtonBar component"
   $: ss = Math.floor((snapshot.remainingMs % 60_000) / 1000);
   $: time = `${mm.toString().padStart(2, "0")}:${ss.toString().padStart(2, "0")}`;
   $: phaseLabel =
-    snapshot.phase === "focus" ? `Focus · ${snapshot.sessionIndex} / ${sessionsPerLongBreak}` :
-    snapshot.phase === "shortBreak" ? "Short break" : "Long break";
+    snapshot.phase === "focus"
+      ? `Focus · ${snapshot.sessionIndex} / ${sessionsPerLongBreak}`
+      : snapshot.phase === "shortBreak"
+        ? "Short break"
+        : "Long break";
 </script>
 
 <div class="card">
@@ -2509,6 +2586,7 @@ git commit -m "feat(ui): CompactCard view"
 ## Task 21: FullScene view
 
 **Files:**
+
 - Create: `src/views/FullScene.svelte`
 
 - [ ] **Step 1: Implement**
@@ -2638,6 +2716,7 @@ git commit -m "feat(ui): FullScene with painted scene, wall clock overlay, alert
 ## Task 22: SettingsDialog
 
 **Files:**
+
 - Create: `src/views/SettingsDialog.svelte`
 
 - [ ] **Step 1: Implement**
@@ -2656,8 +2735,12 @@ git commit -m "feat(ui): FullScene with painted scene, wall clock overlay, alert
 
   function bindNumber(get: (s: Settings) => number, set: (s: Settings, v: number) => Settings) {
     return {
-      get value() { return get($settings); },
-      set value(v: number) { settings.update((s) => set(s, v)); },
+      get value() {
+        return get($settings);
+      },
+      set value(v: number) {
+        settings.update((s) => set(s, v));
+      },
     };
   }
 
@@ -2677,44 +2760,92 @@ git commit -m "feat(ui): FullScene with painted scene, wall clock overlay, alert
     <nav class="tabs">
       <button class:active={tab === "timer"} on:click={() => (tab = "timer")}>Timer</button>
       <button class:active={tab === "scene"} on:click={() => (tab = "scene")}>Scene</button>
-      <button class:active={tab === "notifications"} on:click={() => (tab = "notifications")}>Notifications</button>
+      <button class:active={tab === "notifications"} on:click={() => (tab = "notifications")}
+        >Notifications</button
+      >
     </nav>
 
     <div class="body">
       {#if tab === "timer"}
         <label class="row">
           <span>Focus duration (min)</span>
-          <input type="number" min="1" max="180"
+          <input
+            type="number"
+            min="1"
+            max="180"
             value={$settings.durations.focus}
-            on:input={(e) => settings.update((s) => ({ ...s, durations: { ...s.durations, focus: +e.currentTarget.value } }))} />
+            on:input={(e) =>
+              settings.update((s) => ({
+                ...s,
+                durations: { ...s.durations, focus: +e.currentTarget.value },
+              }))}
+          />
         </label>
         <label class="row">
           <span>Short break (min)</span>
-          <input type="number" min="1" max="60"
+          <input
+            type="number"
+            min="1"
+            max="60"
             value={$settings.durations.shortBreak}
-            on:input={(e) => settings.update((s) => ({ ...s, durations: { ...s.durations, shortBreak: +e.currentTarget.value } }))} />
+            on:input={(e) =>
+              settings.update((s) => ({
+                ...s,
+                durations: { ...s.durations, shortBreak: +e.currentTarget.value },
+              }))}
+          />
         </label>
         <label class="row">
           <span>Long break (min)</span>
-          <input type="number" min="1" max="120"
+          <input
+            type="number"
+            min="1"
+            max="120"
             value={$settings.durations.longBreak}
-            on:input={(e) => settings.update((s) => ({ ...s, durations: { ...s.durations, longBreak: +e.currentTarget.value } }))} />
+            on:input={(e) =>
+              settings.update((s) => ({
+                ...s,
+                durations: { ...s.durations, longBreak: +e.currentTarget.value },
+              }))}
+          />
         </label>
         <label class="row">
           <span>Sessions per long break</span>
-          <input type="number" min="1" max="12"
+          <input
+            type="number"
+            min="1"
+            max="12"
             value={$settings.durations.sessionsPerLongBreak}
-            on:input={(e) => settings.update((s) => ({ ...s, durations: { ...s.durations, sessionsPerLongBreak: +e.currentTarget.value } }))} />
+            on:input={(e) =>
+              settings.update((s) => ({
+                ...s,
+                durations: { ...s.durations, sessionsPerLongBreak: +e.currentTarget.value },
+              }))}
+          />
         </label>
         <label class="row">
           <span>Always-on-top</span>
-          <input type="checkbox" checked={$settings.window.alwaysOnTop}
-            on:change={(e) => settings.update((s) => ({ ...s, window: { ...s.window, alwaysOnTop: e.currentTarget.checked } }))} />
+          <input
+            type="checkbox"
+            checked={$settings.window.alwaysOnTop}
+            on:change={(e) =>
+              settings.update((s) => ({
+                ...s,
+                window: { ...s.window, alwaysOnTop: e.currentTarget.checked },
+              }))}
+          />
         </label>
         <label class="row">
           <span>Menu bar countdown</span>
-          <input type="checkbox" checked={$settings.window.menuBarCountdown}
-            on:change={(e) => settings.update((s) => ({ ...s, window: { ...s.window, menuBarCountdown: e.currentTarget.checked } }))} />
+          <input
+            type="checkbox"
+            checked={$settings.window.menuBarCountdown}
+            on:change={(e) =>
+              settings.update((s) => ({
+                ...s,
+                window: { ...s.window, menuBarCountdown: e.currentTarget.checked },
+              }))}
+          />
         </label>
       {:else if tab === "scene"}
         <div class="scene-grid">
@@ -2722,7 +2853,8 @@ git commit -m "feat(ui): FullScene with painted scene, wall clock overlay, alert
             <button
               class="tile"
               class:selected={$settings.scene.id === scene.id}
-              on:click={() => settings.update((s) => ({ ...s, scene: { ...s.scene, id: scene.id } }))}
+              on:click={() =>
+                settings.update((s) => ({ ...s, scene: { ...s.scene, id: scene.id } }))}
             >
               <div class="preview" style="background: {scene.manifest.palette.primary}"></div>
               <div class="name">{scene.manifest.name}</div>
@@ -2733,7 +2865,14 @@ git commit -m "feat(ui): FullScene with painted scene, wall clock overlay, alert
           <span>Time of day</span>
           <select
             value={$settings.scene.timeOfDayMode}
-            on:change={(e) => settings.update((s) => ({ ...s, scene: { ...s.scene, timeOfDayMode: e.currentTarget.value as Settings["scene"]["timeOfDayMode"] } }))}
+            on:change={(e) =>
+              settings.update((s) => ({
+                ...s,
+                scene: {
+                  ...s.scene,
+                  timeOfDayMode: e.currentTarget.value as Settings["scene"]["timeOfDayMode"],
+                },
+              }))}
           >
             <option value="auto">Auto (wall clock)</option>
             <option value="morning">Morning</option>
@@ -2745,23 +2884,51 @@ git commit -m "feat(ui): FullScene with painted scene, wall clock overlay, alert
       {:else}
         <label class="row">
           <span>macOS banner</span>
-          <input type="checkbox" checked={$settings.notifications.banner}
-            on:change={() => toggleBool((s) => s.notifications.banner, (s, v) => ({ ...s, notifications: { ...s.notifications, banner: v } }))} />
+          <input
+            type="checkbox"
+            checked={$settings.notifications.banner}
+            on:change={() =>
+              toggleBool(
+                (s) => s.notifications.banner,
+                (s, v) => ({ ...s, notifications: { ...s.notifications, banner: v } }),
+              )}
+          />
         </label>
         <label class="row">
           <span>In-app overlay</span>
-          <input type="checkbox" checked={$settings.notifications.inApp}
-            on:change={() => toggleBool((s) => s.notifications.inApp, (s, v) => ({ ...s, notifications: { ...s.notifications, inApp: v } }))} />
+          <input
+            type="checkbox"
+            checked={$settings.notifications.inApp}
+            on:change={() =>
+              toggleBool(
+                (s) => s.notifications.inApp,
+                (s, v) => ({ ...s, notifications: { ...s.notifications, inApp: v } }),
+              )}
+          />
         </label>
         <label class="row">
           <span>Audible chime</span>
-          <input type="checkbox" checked={$settings.notifications.chime}
-            on:change={() => toggleBool((s) => s.notifications.chime, (s, v) => ({ ...s, notifications: { ...s.notifications, chime: v } }))} />
+          <input
+            type="checkbox"
+            checked={$settings.notifications.chime}
+            on:change={() =>
+              toggleBool(
+                (s) => s.notifications.chime,
+                (s, v) => ({ ...s, notifications: { ...s.notifications, chime: v } }),
+              )}
+          />
         </label>
         <label class="row">
           <span>Dock bounce</span>
-          <input type="checkbox" checked={$settings.notifications.dockBounce}
-            on:change={() => toggleBool((s) => s.notifications.dockBounce, (s, v) => ({ ...s, notifications: { ...s.notifications, dockBounce: v } }))} />
+          <input
+            type="checkbox"
+            checked={$settings.notifications.dockBounce}
+            on:change={() =>
+              toggleBool(
+                (s) => s.notifications.dockBounce,
+                (s, v) => ({ ...s, notifications: { ...s.notifications, dockBounce: v } }),
+              )}
+          />
         </label>
       {/if}
     </div>
@@ -2773,25 +2940,125 @@ git commit -m "feat(ui): FullScene with painted scene, wall clock overlay, alert
 </div>
 
 <style>
-  .backdrop { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.5); display: grid; place-items: center; z-index: 100; }
-  .modal { width: min(560px, 90vw); background: #1c1e25; color: #e6e3da; border-radius: 14px; overflow: hidden; font-family: ui-rounded, system-ui; }
-  header { display: flex; align-items: center; gap: 12px; padding: 14px 18px; border-bottom: 1px solid rgba(255,255,255,0.06); }
-  header h3 { margin: 0; font-size: 15px; flex: 1; }
-  .x { background: none; border: none; color: #8a8578; cursor: pointer; font-size: 16px; }
-  .tabs { display: flex; padding: 0 18px; border-bottom: 1px solid rgba(255,255,255,0.06); }
-  .tabs button { background: none; border: none; color: #8a8578; padding: 10px 14px; cursor: pointer; border-bottom: 2px solid transparent; font: inherit; }
-  .tabs button.active { color: #c9b78a; border-bottom-color: #c9b78a; }
-  .body { padding: 14px 18px; max-height: 60vh; overflow: auto; }
-  .row { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; font-size: 13px; }
-  input[type="number"], select { background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.08); color: #e6e3da; padding: 4px 8px; border-radius: 6px; }
-  input[type="checkbox"] { accent-color: #c9b78a; }
-  footer { display: flex; justify-content: flex-end; padding: 12px 18px; border-top: 1px solid rgba(255,255,255,0.06); background: rgba(0,0,0,0.15); }
-  footer .primary { background: #c9b78a; color: #1c1e25; border: none; padding: 6px 14px; border-radius: 6px; cursor: pointer; font: inherit; }
-  .scene-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 14px; }
-  .tile { background: none; border: 2px solid transparent; padding: 0; border-radius: 8px; cursor: pointer; color: inherit; font: inherit; }
-  .tile.selected { border-color: #c9b78a; }
-  .tile .preview { aspect-ratio: 4/3; border-radius: 6px; }
-  .tile .name { font-size: 11px; padding-top: 4px; color: #8a8578; }
+  .backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: grid;
+    place-items: center;
+    z-index: 100;
+  }
+  .modal {
+    width: min(560px, 90vw);
+    background: #1c1e25;
+    color: #e6e3da;
+    border-radius: 14px;
+    overflow: hidden;
+    font-family: ui-rounded, system-ui;
+  }
+  header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 18px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  }
+  header h3 {
+    margin: 0;
+    font-size: 15px;
+    flex: 1;
+  }
+  .x {
+    background: none;
+    border: none;
+    color: #8a8578;
+    cursor: pointer;
+    font-size: 16px;
+  }
+  .tabs {
+    display: flex;
+    padding: 0 18px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  }
+  .tabs button {
+    background: none;
+    border: none;
+    color: #8a8578;
+    padding: 10px 14px;
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    font: inherit;
+  }
+  .tabs button.active {
+    color: #c9b78a;
+    border-bottom-color: #c9b78a;
+  }
+  .body {
+    padding: 14px 18px;
+    max-height: 60vh;
+    overflow: auto;
+  }
+  .row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 0;
+    font-size: 13px;
+  }
+  input[type="number"],
+  select {
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    color: #e6e3da;
+    padding: 4px 8px;
+    border-radius: 6px;
+  }
+  input[type="checkbox"] {
+    accent-color: #c9b78a;
+  }
+  footer {
+    display: flex;
+    justify-content: flex-end;
+    padding: 12px 18px;
+    border-top: 1px solid rgba(255, 255, 255, 0.06);
+    background: rgba(0, 0, 0, 0.15);
+  }
+  footer .primary {
+    background: #c9b78a;
+    color: #1c1e25;
+    border: none;
+    padding: 6px 14px;
+    border-radius: 6px;
+    cursor: pointer;
+    font: inherit;
+  }
+  .scene-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    margin-bottom: 14px;
+  }
+  .tile {
+    background: none;
+    border: 2px solid transparent;
+    padding: 0;
+    border-radius: 8px;
+    cursor: pointer;
+    color: inherit;
+    font: inherit;
+  }
+  .tile.selected {
+    border-color: #c9b78a;
+  }
+  .tile .preview {
+    aspect-ratio: 4/3;
+    border-radius: 6px;
+  }
+  .tile .name {
+    font-size: 11px;
+    padding-top: 4px;
+    color: #8a8578;
+  }
 </style>
 ```
 
@@ -2808,6 +3075,7 @@ git commit -m "feat(ui): SettingsDialog with Timer/Scene/Notifications tabs"
 ## Task 23: HistoryPanel
 
 **Files:**
+
 - Create: `src/views/HistoryPanel.svelte`
 
 - [ ] **Step 1: Implement**
@@ -2827,23 +3095,76 @@ git commit -m "feat(ui): SettingsDialog with Timer/Scene/Notifications tabs"
   <div class="panel" on:click|stopPropagation>
     <h3>Your sessions</h3>
     <div class="stats">
-      <div class="stat"><div class="big">{$tallies.today}</div><div class="lbl">Today</div></div>
-      <div class="stat"><div class="big">{$tallies.thisWeek}</div><div class="lbl">This week</div></div>
-      <div class="stat"><div class="big">{hoursFocused}h</div><div class="lbl">Focused this week</div></div>
+      <div class="stat">
+        <div class="big">{$tallies.today}</div>
+        <div class="lbl">Today</div>
+      </div>
+      <div class="stat">
+        <div class="big">{$tallies.thisWeek}</div>
+        <div class="lbl">This week</div>
+      </div>
+      <div class="stat">
+        <div class="big">{hoursFocused}h</div>
+        <div class="lbl">Focused this week</div>
+      </div>
     </div>
     <button class="close" on:click={onClose}>Close</button>
   </div>
 </div>
 
 <style>
-  .backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: grid; place-items: center; z-index: 100; }
-  .panel { background: #1c1e25; color: #e6e3da; border-radius: 14px; padding: 20px; min-width: 360px; font-family: ui-rounded, system-ui; }
-  h3 { margin: 0 0 14px; }
-  .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
-  .stat { background: rgba(255,255,255,0.04); padding: 14px; border-radius: 8px; text-align: center; }
-  .big { font-size: 28px; font-weight: 300; }
-  .lbl { font-size: 11px; color: #8a8578; text-transform: uppercase; letter-spacing: 1px; margin-top: 4px; }
-  .close { display: block; margin: 14px 0 0 auto; background: #c9b78a; color: #1c1e25; border: none; padding: 6px 14px; border-radius: 6px; cursor: pointer; font: inherit; }
+  .backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: grid;
+    place-items: center;
+    z-index: 100;
+  }
+  .panel {
+    background: #1c1e25;
+    color: #e6e3da;
+    border-radius: 14px;
+    padding: 20px;
+    min-width: 360px;
+    font-family: ui-rounded, system-ui;
+  }
+  h3 {
+    margin: 0 0 14px;
+  }
+  .stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+  }
+  .stat {
+    background: rgba(255, 255, 255, 0.04);
+    padding: 14px;
+    border-radius: 8px;
+    text-align: center;
+  }
+  .big {
+    font-size: 28px;
+    font-weight: 300;
+  }
+  .lbl {
+    font-size: 11px;
+    color: #8a8578;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-top: 4px;
+  }
+  .close {
+    display: block;
+    margin: 14px 0 0 auto;
+    background: #c9b78a;
+    color: #1c1e25;
+    border: none;
+    padding: 6px 14px;
+    border-radius: 6px;
+    cursor: pointer;
+    font: inherit;
+  }
 </style>
 ```
 
@@ -2860,6 +3181,7 @@ git commit -m "feat(ui): HistoryPanel with today/week tallies"
 ## Task 24: App.svelte root composition
 
 **Files:**
+
 - Modify: `src/App.svelte`
 - Modify: `src/main.ts` (if needed for global styles)
 - Create: `src/lib/assets/chime.wav` (placeholder — see step 2)
@@ -2953,14 +3275,32 @@ ls src/lib/assets/ # confirm chime.wav exists
   });
 
   const actions = {
-    onStart: () => { engine.start(); snapshot = engine.snapshot(); },
-    onPause: () => { engine.pause(); snapshot = engine.snapshot(); },
-    onResume: () => { engine.resume(); snapshot = engine.snapshot(); },
-    onSkip: () => { engine.skip(); snapshot = engine.snapshot(); },
-    onExtend: () => { engine.extend(5); snapshot = engine.snapshot(); },
-    onReset: () => { engine.reset(); snapshot = engine.snapshot(); },
+    onStart: () => {
+      engine.start();
+      snapshot = engine.snapshot();
+    },
+    onPause: () => {
+      engine.pause();
+      snapshot = engine.snapshot();
+    },
+    onResume: () => {
+      engine.resume();
+      snapshot = engine.snapshot();
+    },
+    onSkip: () => {
+      engine.skip();
+      snapshot = engine.snapshot();
+    },
+    onExtend: () => {
+      engine.extend(5);
+      snapshot = engine.snapshot();
+    },
+    onReset: () => {
+      engine.reset();
+      snapshot = engine.snapshot();
+    },
     onToggleMode: async () => {
-      const next: Mode = ($mode === "compact" ? "full" : "compact");
+      const next: Mode = $mode === "compact" ? "full" : "compact";
       await mode.setMode(next);
     },
     onOpenSettings: () => (showSettings = true),
@@ -3003,7 +3343,9 @@ ls src/lib/assets/ # confirm chime.wav exists
     <HistoryPanel tallies={history} onClose={() => (showHistory = false)} />
   {/if}
 {:else}
-  <div style="display:grid;place-items:center;height:100vh;color:#8a8578;font-family:ui-rounded">Loading…</div>
+  <div style="display:grid;place-items:center;height:100vh;color:#8a8578;font-family:ui-rounded">
+    Loading…
+  </div>
 {/if}
 ```
 
@@ -3043,6 +3385,7 @@ git commit -m "feat(app): wire root composition with stores, engine, notifier"
 ## Task 25: Two placeholder bundled scenes
 
 **Files:**
+
 - Create: `scenes/cabin/scene.json`, `scenes/cabin/background.webp`, `scenes/cabin/preview.webp`
 - Create: `scenes/cafe/scene.json`, `scenes/cafe/background.webp`, `scenes/cafe/preview.webp`
 
@@ -3126,6 +3469,7 @@ git commit -m "feat(scenes): add cabin + cafe placeholder scene packs"
 ## Task 26: README, CONTRIBUTING, LICENSE, scene-pack docs
 
 **Files:**
+
 - Create: `README.md`, `LICENSE`, `CONTRIBUTING.md`, `docs/scene-pack-format.md`, `docs/release-checklist.md`
 
 - [ ] **Step 1: Add MIT `LICENSE`**
@@ -3134,7 +3478,7 @@ Copy the standard MIT license text into `LICENSE` with copyright `Copyright (c) 
 
 - [ ] **Step 2: Write `README.md`**
 
-```markdown
+````markdown
 # PomoBuddy
 
 A macOS Pomodoro timer with a painted lofi scene to keep you company. Two modes: a small compact card, and a full-window scene with a wall clock that counts down your focus session.
@@ -3142,9 +3486,11 @@ A macOS Pomodoro timer with a painted lofi scene to keep you company. Two modes:
 ![PomoBuddy screenshot](docs/screenshots/full-mode.webp)
 
 ## Why
+
 Most Pomodoro timers are utilitarian. PomoBuddy adds a calm, painted ambience — a quiet cabin or cafe — without becoming a distraction. Every action is one click; no menu diving.
 
 ## Features
+
 - Compact mode + full painted-scene mode
 - Wall-clock-accurate timer (survives sleep/wake)
 - Configurable durations (default 25 / 5 / 15 with 4 sessions per long break)
@@ -3170,6 +3516,7 @@ npm install
 npm run tauri dev      # development
 npm run tauri build    # produces .dmg in src-tauri/target/release/bundle/dmg
 ```
+````
 
 ## Where your data lives
 
@@ -3184,8 +3531,10 @@ npm run tauri build    # produces .dmg in src-tauri/target/release/bundle/dmg
 See [CONTRIBUTING.md](CONTRIBUTING.md) for the scene-pack contribution guide and dev setup.
 
 ## License
+
 MIT — see [LICENSE](LICENSE).
-```
+
+````
 
 - [ ] **Step 3: Write `CONTRIBUTING.md`**
 
@@ -3200,15 +3549,17 @@ MIT — see [LICENSE](LICENSE).
 ```bash
 npm install
 npm run tauri dev
-```
+````
 
 ## Project structure
+
 - `src/lib/` — TS units (timer, scenes, stores, platform, notify). One responsibility each.
 - `src/views/` — Svelte components. Read stores, render. No business logic.
 - `src-tauri/` — Rust shell. Thin: window mgmt, atomic FS, notifications.
 - `scenes/` — bundled scene packs.
 
 ## Tests
+
 - `npm test` — Vitest unit suite. Add tests for any new logic in `src/lib/`.
 - `npm run check` — Svelte type check.
 - `npm run lint` — ESLint + Prettier.
@@ -3217,9 +3568,11 @@ npm run tauri dev
 CI runs all four on every PR.
 
 ## Manual smoke checklist
+
 See [docs/release-checklist.md](docs/release-checklist.md).
 
 ## Submitting a scene pack
+
 1. Create a folder under your local `scenes/` (in this repo or in `~/Library/Application Support/PomoBuddy/scenes/`)
 2. Add a `scene.json` matching the schema in [docs/scene-pack-format.md](docs/scene-pack-format.md)
 3. Add `background.webp` and optionally `foreground.webp` + `preview.webp`
@@ -3229,8 +3582,10 @@ See [docs/release-checklist.md](docs/release-checklist.md).
 Accepted licenses for bundled scenes: CC0, CC-BY, MIT, or compatible permissive license. Credit the artist in the manifest's `author` field.
 
 ## Commit style
+
 Conventional Commits (`feat:`, `fix:`, `docs:`, `chore:`, `test:`).
-```
+
+````
 
 - [ ] **Step 4: Write `docs/scene-pack-format.md`**
 
@@ -3246,13 +3601,15 @@ Drop a folder into either location and it appears in **Settings → Scene** on n
 
 ## Folder layout
 
-```
+````
+
 my-scene/
 ├── scene.json
-├── background.webp     ← required
-├── foreground.webp     ← optional (drawn over the character/desk area for depth)
-└── preview.webp        ← optional (320×200 thumbnail for the scene picker)
-```
+├── background.webp ← required
+├── foreground.webp ← optional (drawn over the character/desk area for depth)
+└── preview.webp ← optional (320×200 thumbnail for the scene picker)
+
+````
 
 ## Manifest schema
 
@@ -3300,28 +3657,28 @@ my-scene/
     "portrait": { "clock": { "x": 0.72, "y": 0.18, "diameter": 0.28 } }
   }
 }
-```
+````
 
 ## Field reference
 
-| Field | Type | Required | Notes |
-|---|---|---|---|
-| `id` | string | yes | Unique scene identifier. Use lowercase-with-hyphens. |
-| `name` | string | yes | Human-readable name shown in the picker. |
-| `author` | string | yes | Credit displayed in app metadata. |
-| `license` | string | yes | SPDX identifier (e.g., `CC0-1.0`, `CC-BY-4.0`, `MIT`). |
-| `version` | `1` | yes | Schema version; only `1` is supported today. |
-| `layers.background` | string | yes | Relative path to the base image. |
-| `layers.foreground` | string | no | Relative path to a foreground layer drawn over the character/desk. |
-| `preview` | string | no | Relative path to a 320×200 (≈) thumbnail. |
-| `clock` | object | yes | Position + face style for the wall clock overlay. |
-| `clock.x` / `clock.y` | 0–1 | yes | Center of the clock as a fraction of canvas width/height. |
-| `clock.diameter` | 0–1 | yes | Clock diameter as a fraction of the shorter canvas axis. |
-| `clock.face` | string | yes | Accent name; `warm-cream` is the default. |
-| `phaseTag.x` / `phaseTag.y` | 0–1 | yes | Top-left position of the phase label pill. |
-| `palette.{primary,accent,ink}` | hex | yes | Colors the UI samples for the clock arc and overlays. |
-| `timeOfDay.mode` | `"tint"` \| `"variants"` | yes | See below. |
-| `responsive.portrait` / `responsive.square` | object | no | Aspect-specific overrides for `clock` position. |
+| Field                                       | Type                     | Required | Notes                                                              |
+| ------------------------------------------- | ------------------------ | -------- | ------------------------------------------------------------------ |
+| `id`                                        | string                   | yes      | Unique scene identifier. Use lowercase-with-hyphens.               |
+| `name`                                      | string                   | yes      | Human-readable name shown in the picker.                           |
+| `author`                                    | string                   | yes      | Credit displayed in app metadata.                                  |
+| `license`                                   | string                   | yes      | SPDX identifier (e.g., `CC0-1.0`, `CC-BY-4.0`, `MIT`).             |
+| `version`                                   | `1`                      | yes      | Schema version; only `1` is supported today.                       |
+| `layers.background`                         | string                   | yes      | Relative path to the base image.                                   |
+| `layers.foreground`                         | string                   | no       | Relative path to a foreground layer drawn over the character/desk. |
+| `preview`                                   | string                   | no       | Relative path to a 320×200 (≈) thumbnail.                          |
+| `clock`                                     | object                   | yes      | Position + face style for the wall clock overlay.                  |
+| `clock.x` / `clock.y`                       | 0–1                      | yes      | Center of the clock as a fraction of canvas width/height.          |
+| `clock.diameter`                            | 0–1                      | yes      | Clock diameter as a fraction of the shorter canvas axis.           |
+| `clock.face`                                | string                   | yes      | Accent name; `warm-cream` is the default.                          |
+| `phaseTag.x` / `phaseTag.y`                 | 0–1                      | yes      | Top-left position of the phase label pill.                         |
+| `palette.{primary,accent,ink}`              | hex                      | yes      | Colors the UI samples for the clock arc and overlays.              |
+| `timeOfDay.mode`                            | `"tint"` \| `"variants"` | yes      | See below.                                                         |
+| `responsive.portrait` / `responsive.square` | object                   | no       | Aspect-specific overrides for `clock` position.                    |
 
 ### Coordinate system
 
@@ -3344,9 +3701,9 @@ Two modes:
     "mode": "variants",
     "variants": {
       "morning": "morning.webp",
-      "midday":  "midday.webp",
-      "dusk":    "dusk.webp",
-      "night":   "night.webp"
+      "midday": "midday.webp",
+      "dusk": "dusk.webp",
+      "night": "night.webp"
     }
   }
 }
@@ -3392,7 +3749,8 @@ Always use **relative paths inside the scene folder**.
 - **Style:** painted/illustration. Avoid high-contrast vibrant colors — the goal is calm ambience.
 - **Composition:** leave a clear area for the wall clock (`clock.x`, `clock.y`, `clock.diameter`). Avoid placing detailed elements in the bottom 12% of the canvas — that's where the button bar sits.
 - **Foreground layer:** keep it sparse (a partial silhouette, plants, a frame) — anything thick will block the clock.
-```
+
+````
 
 - [ ] **Step 5: Write `docs/release-checklist.md`**
 
@@ -3428,7 +3786,7 @@ Before tagging a release, run through this list manually.
 ## Scenes
 - [ ] Drop a folder with a valid `scene.json` into `~/Library/Application Support/PomoBuddy/scenes/` — appears in Settings → Scene.
 - [ ] Drop a folder with `scene.json` containing `"../escape.webp"` — does NOT appear in the picker; warning logged.
-```
+````
 
 - [ ] **Step 6: Commit**
 
@@ -3455,21 +3813,21 @@ If everything passes: ready to tag `v0.1.0` and push to GitHub.
 
 ## Spec coverage map
 
-| Spec §  | Implemented in task |
-|---|---|
-| §3.1 Timer behavior | Tasks 4–7 |
-| §3.2 Modes | Tasks 17, 20, 21 |
-| §3.3 Scenes | Tasks 8–10, 15, 25 |
-| §3.4 Phase-end alert | Task 16 |
-| §3.5 Window behavior | Tasks 11, 17, 22 |
-| §3.6 History | Tasks 14, 23 |
-| §4 Architecture | All tasks (top-level shape) |
-| §5 Repo layout | Established by Tasks 1, 2 |
-| §6 Scene-pack format | Tasks 8, 9, 26 |
-| §6.3 Security | Tasks 2 (capability scope), 9 (path validator), 15 (loader uses it) |
-| §7 Core components | Tasks 5–7, 11–17 |
-| §8 Data flow | Task 24 wires it |
-| §9 Persistence | Task 12 (Rust commands), 13–14 (stores) |
-| §10 Testing | Embedded in each TDD task; CI from Task 3 |
+| Spec §                                          | Implemented in task                                                    |
+| ----------------------------------------------- | ---------------------------------------------------------------------- |
+| §3.1 Timer behavior                             | Tasks 4–7                                                              |
+| §3.2 Modes                                      | Tasks 17, 20, 21                                                       |
+| §3.3 Scenes                                     | Tasks 8–10, 15, 25                                                     |
+| §3.4 Phase-end alert                            | Task 16                                                                |
+| §3.5 Window behavior                            | Tasks 11, 17, 22                                                       |
+| §3.6 History                                    | Tasks 14, 23                                                           |
+| §4 Architecture                                 | All tasks (top-level shape)                                            |
+| §5 Repo layout                                  | Established by Tasks 1, 2                                              |
+| §6 Scene-pack format                            | Tasks 8, 9, 26                                                         |
+| §6.3 Security                                   | Tasks 2 (capability scope), 9 (path validator), 15 (loader uses it)    |
+| §7 Core components                              | Tasks 5–7, 11–17                                                       |
+| §8 Data flow                                    | Task 24 wires it                                                       |
+| §9 Persistence                                  | Task 12 (Rust commands), 13–14 (stores)                                |
+| §10 Testing                                     | Embedded in each TDD task; CI from Task 3                              |
 | §11 Risks (asset quality, Tauri/Svelte newness) | Mitigated by placeholder scenes (Task 25) and version-pinning (Task 1) |
-| §12 v1 scope checklist | All boxes covered by Tasks 1–26 |
+| §12 v1 scope checklist                          | All boxes covered by Tasks 1–26                                        |

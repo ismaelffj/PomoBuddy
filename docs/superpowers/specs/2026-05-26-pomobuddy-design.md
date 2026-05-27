@@ -7,13 +7,14 @@
 
 ## 1. Summary
 
-PomoBuddy is a macOS desktop Pomodoro timer with two display modes: a small **compact** card that stays out of the way, and a **full** mode that frames the timer inside a painted lofi scene (cabin, cafe, library) for ambience while working. The wall clock in the scene *is* the timer — an analog face with a countdown arc plus a small digital readout.
+PomoBuddy is a macOS desktop Pomodoro timer with two display modes: a small **compact** card that stays out of the way, and a **full** mode that frames the timer inside a painted lofi scene (cabin, cafe, library) for ambience while working. The wall clock in the scene _is_ the timer — an analog face with a countdown arc plus a small digital readout.
 
 The app targets macOS first, with a future web build planned from the same UI codebase. All UI logic is built in Svelte; a thin Tauri (Rust) shell provides native OS integration. No background sounds in v1 — only a single chime for the phase-end alert.
 
 ## 2. Goals & non-goals
 
 **Goals**
+
 - A polished, single-window desktop Pomodoro timer that's pleasant to look at and disappear into
 - Every action is reachable in one click — no menu diving, just a settings dialog for config
 - Multiple lofi scenes that shift palette through the day, extensible via a documented scene-pack format
@@ -21,6 +22,7 @@ The app targets macOS first, with a future web build planned from the same UI co
 - Architecture that supports a future web (PWA) build without rewriting the UI
 
 **Non-goals (v1)**
+
 - Background ambient sounds (rain, wind, fire) — `Notifier` only fires the alert chime
 - Cross-platform builds (Windows, Linux) — Tauri supports them, but v1 ships macOS only
 - Detailed productivity analytics — only today / this week tallies for v1
@@ -30,6 +32,7 @@ The app targets macOS first, with a future web build planned from the same UI co
 ## 3. User-facing features
 
 ### 3.1 Timer behavior
+
 - Standard Pomodoro defaults: **25 min focus / 5 min short break / 15 min long break** after every 4 focus sessions. All durations and the cycle length are user-configurable.
 - **Manual phase advance** — when a phase ends, the user clicks Start to begin the next one. No auto-advance. Rationale: keeps the loop deliberate.
 - Controls (always visible, both modes): **Start/Pause, Skip, +5 (extend), Reset, Settings**. Full mode also surfaces **Compact toggle**, **History glance**, **Scene picker**.
@@ -37,6 +40,7 @@ The app targets macOS first, with a future web build planned from the same UI co
 ### 3.2 Modes
 
 **Compact mode** — a small card (~320×200 px) with:
+
 - Phase pill (`Focus · 1 / 4`)
 - Large countdown (mm:ss)
 - All controls in a single row of icon buttons
@@ -46,12 +50,15 @@ The app targets macOS first, with a future web build planned from the same UI co
 The mode toggle is one click; the window resizes itself.
 
 ### 3.3 Scenes
+
 - v1 ships two scenes: **Cabin** and **Cafe**, AI-generated in a consistent lofi-anime style (Ghibli-adjacent painted illustration).
 - Time-of-day cycle: the scene tints gradually through morning → midday → dusk → night based on real wall-clock time. Users can override with "fixed" presets.
 - Scenes are user-extensible: drop a folder into `~/Library/Application Support/PomoBuddy/scenes/`. See §6.
 
 ### 3.4 Phase-end alert
+
 Four independent channels, each toggleable in Settings:
+
 1. **macOS system banner** (via `tauri-plugin-notification`) — fires permission prompt on first enable
 2. **In-app visual overlay** — soft pulse + next-phase label over the scene
 3. **Audible chime** — single bundled WAV, plays once
@@ -60,11 +67,13 @@ Four independent channels, each toggleable in Settings:
 Defaults: banner + in-app + chime on; dock bounce off.
 
 ### 3.5 Window behavior
+
 - Standard resizable window
 - **Always-on-top** toggle (Settings)
 - **Menu bar countdown** (Settings) — small icon in macOS status bar showing remaining time; click opens the app
 
 ### 3.6 History
+
 Light: a small panel shows **sessions today**, **sessions this week**, and **total focus hours this week**. No detailed per-session log in v1. Sessions are logged only on **phase-end** of a focus phase (skip ≠ logged).
 
 ## 4. Architecture
@@ -97,14 +106,14 @@ Three layers:
 
 ### 4.1 Stack
 
-| Concern | Choice | Notes |
-|---|---|---|
-| Native shell | Tauri 2 (Rust) | Small bundle (~10MB + assets), built-in macOS APIs |
-| Frontend framework | Svelte 5 + TypeScript | Compact, reactive, small bundle |
-| Build tool | Vite | Standard Svelte/Tauri toolchain |
-| Schema validation | Zod | For `scene.json` and `settings.json` |
-| Tests | Vitest | Unit tests for logic units |
-| Lint/format | ESLint + Prettier | Standard config in repo |
+| Concern            | Choice                | Notes                                              |
+| ------------------ | --------------------- | -------------------------------------------------- |
+| Native shell       | Tauri 2 (Rust)        | Small bundle (~10MB + assets), built-in macOS APIs |
+| Frontend framework | Svelte 5 + TypeScript | Compact, reactive, small bundle                    |
+| Build tool         | Vite                  | Standard Svelte/Tauri toolchain                    |
+| Schema validation  | Zod                   | For `scene.json` and `settings.json`               |
+| Tests              | Vitest                | Unit tests for logic units                         |
+| Lint/format        | ESLint + Prettier     | Standard config in repo                            |
 
 ## 5. Repo layout
 
@@ -205,23 +214,23 @@ A scene is a folder containing a `scene.json` manifest plus image assets. Bundle
   "phaseTag": { "x": 0.04, "y": 0.06 },
 
   "palette": {
-    "primary":   "#c97a5a",
-    "accent":    "#c9b78a",
-    "ink":       "#3a2f24"
+    "primary": "#c97a5a",
+    "accent": "#c9b78a",
+    "ink": "#3a2f24"
   },
 
   "timeOfDay": {
     "mode": "tint",
     "tints": {
       "morning": "#f0c79a",
-      "midday":  "#ffffff",
-      "dusk":    "#c97a5a",
-      "night":   "#4a5868"
+      "midday": "#ffffff",
+      "dusk": "#c97a5a",
+      "night": "#4a5868"
     }
   },
 
   "responsive": {
-    "portrait":  { "clock": { "x": 0.72, "y": 0.18, "diameter": 0.28 } }
+    "portrait": { "clock": { "x": 0.72, "y": 0.18, "diameter": 0.28 } }
   }
 }
 ```
@@ -260,7 +269,7 @@ Anything outside those roots will not load even if a manifest tries. A scene tha
 
 Pure TypeScript, no DOM, no Tauri. Owns the phase state machine.
 
-**Phase cycle** (the order phases follow within one Pomodoro cycle — *not* an auto-advance loop):
+**Phase cycle** (the order phases follow within one Pomodoro cycle — _not_ an auto-advance loop):
 
 ```
 focus → shortBreak → focus → shortBreak → focus → shortBreak → focus → longBreak → (cycle repeats)
@@ -287,12 +296,12 @@ focus → shortBreak → focus → shortBreak → focus → shortBreak → focus
 ```ts
 // Emitted exactly once when a phase reaches remaining === 0 naturally
 type PhaseEndedEvent = {
-  completedPhase: Phase;   // the phase that just ended — use this for notification copy + history
-  nextPhase: Phase;        // the phase that will start when the user clicks Start
-  natural: true;           // always true; skip() does NOT emit this event
-  startedAt: number;       // epoch ms when this phase first ran (the original anchor, before any pauses)
-  endedAt: number;         // epoch ms
-  sessionIndex: number;    // 1-based within the current long-break cycle
+  completedPhase: Phase; // the phase that just ended — use this for notification copy + history
+  nextPhase: Phase; // the phase that will start when the user clicks Start
+  natural: true; // always true; skip() does NOT emit this event
+  startedAt: number; // epoch ms when this phase first ran (the original anchor, before any pauses)
+  endedAt: number; // epoch ms
+  sessionIndex: number; // 1-based within the current long-break cycle
 };
 ```
 
@@ -310,6 +319,7 @@ The engine stores `phaseStartedAt` (epoch ms), `phaseDurationMs`, and `pausedOff
 On `pause`, the elapsed time since the last anchor is folded into `pausedOffsetMs` on `resume`. On `skip`, `extend(n)`, and `reset`, the anchors are recomputed.
 
 **Action semantics:**
+
 - `skip()` advances to the next phase **without** emitting `PhaseEndedEvent`, firing notifications, or logging history (it's a quiet abort, by design).
 - A focus session is logged to history only on natural phase-end, never on skip.
 - `extend(5)` adds 5 minutes to `phaseDurationMs` while running (or paused).
@@ -399,14 +409,14 @@ scenes/             ← user-installed scene packs (optional)
 
 Scaled to scope — full coverage where bugs hurt most, manual smoke for the rest.
 
-| Layer | Tested how | Why |
-|---|---|---|
-| `TimerEngine` | Vitest unit tests covering every transition, skip, extend, reset, long-break cycle. Uses `vi.useFakeTimers()` plus a controllable wall-clock (inject `now()` into the engine) for explicit time-travel tests: large jumps forward (simulating sleep/wake), small jitter, and event-loop stalls. | Bugs here = wrong session counts or drift after sleep. Full coverage. |
-| `SceneLoader` validation | Vitest with fixture valid/invalid `scene.json` | Contribution interface — broken scenes must be rejected with clear errors, not crash. |
-| `SettingsStore` / `HistoryStore` | Vitest contract tests with mocked FS | Persistence corruption fallback needs a real test. |
-| `Notifier` | Vitest with mocked Tauri APIs; verify routing matches settings | A disabled channel must never fire. |
-| Svelte views | Manual checklist in `CONTRIBUTING.md` | Views are thin; automated snapshots cost more than they catch at this scale. |
-| End-to-end | Manual smoke checklist in `docs/release-checklist.md` | Cheaper than maintaining Playwright for one platform / one person. |
+| Layer                            | Tested how                                                                                                                                                                                                                                                                                      | Why                                                                                   |
+| -------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------- |
+| `TimerEngine`                    | Vitest unit tests covering every transition, skip, extend, reset, long-break cycle. Uses `vi.useFakeTimers()` plus a controllable wall-clock (inject `now()` into the engine) for explicit time-travel tests: large jumps forward (simulating sleep/wake), small jitter, and event-loop stalls. | Bugs here = wrong session counts or drift after sleep. Full coverage.                 |
+| `SceneLoader` validation         | Vitest with fixture valid/invalid `scene.json`                                                                                                                                                                                                                                                  | Contribution interface — broken scenes must be rejected with clear errors, not crash. |
+| `SettingsStore` / `HistoryStore` | Vitest contract tests with mocked FS                                                                                                                                                                                                                                                            | Persistence corruption fallback needs a real test.                                    |
+| `Notifier`                       | Vitest with mocked Tauri APIs; verify routing matches settings                                                                                                                                                                                                                                  | A disabled channel must never fire.                                                   |
+| Svelte views                     | Manual checklist in `CONTRIBUTING.md`                                                                                                                                                                                                                                                           | Views are thin; automated snapshots cost more than they catch at this scale.          |
+| End-to-end                       | Manual smoke checklist in `docs/release-checklist.md`                                                                                                                                                                                                                                           | Cheaper than maintaining Playwright for one platform / one person.                    |
 
 CI (GitHub Actions) runs on every PR:
 
