@@ -37,12 +37,14 @@
   <button on:click={onSkip} aria-label="Skip">{compact ? "⏭" : "Skip"}</button>
   <button on:click={onExtend} aria-label="Extend 5 minutes">{compact ? "+5" : "+5 min"}</button>
   <button on:click={onReset} aria-label="Reset">{compact ? "⟳" : "Reset"}</button>
-  <span class="spacer"></span>
-  <button on:click={onToggleMode} aria-label="Toggle mode">{compact ? "▦" : "Compact"}</button>
-  {#if onOpenHistory}
-    <button on:click={onOpenHistory} aria-label="History">{compact ? "📊" : "History"}</button>
+  {#if !compact}
+    <span class="spacer"></span>
+    <button on:click={onToggleMode} aria-label="Compact mode">Compact</button>
+    {#if onOpenHistory}
+      <button on:click={onOpenHistory} aria-label="History">History</button>
+    {/if}
+    <button on:click={onOpenSettings} aria-label="Settings">⚙</button>
   {/if}
-  <button on:click={onOpenSettings} aria-label="Settings">⚙</button>
 </div>
 
 <style>

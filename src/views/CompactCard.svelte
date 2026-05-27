@@ -28,7 +28,15 @@
 </script>
 
 <div class="card">
-  <div class="pill">{phaseLabel}</div>
+  <div class="top-row">
+    <div class="pill">{phaseLabel}</div>
+    <div class="corner">
+      <button class="icon" on:click={actions.onToggleMode} aria-label="Expand to full mode">
+        ⛶
+      </button>
+      <button class="icon" on:click={actions.onOpenSettings} aria-label="Settings">⚙</button>
+    </div>
+  </div>
   <div class="time">{time}</div>
   <ButtonBar
     runState={snapshot.runState}
@@ -50,10 +58,16 @@
     background: linear-gradient(180deg, #2a2c33 0%, #1f2128 100%);
     color: #e6e3da;
     font-family: ui-rounded, system-ui, sans-serif;
-    padding: 12px 14px;
+    padding: 10px 12px 4px;
     display: flex;
     flex-direction: column;
-    gap: 4px;
+    gap: 2px;
+  }
+  .top-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
   }
   .pill {
     font-size: 11px;
@@ -63,13 +77,33 @@
     background: rgba(201, 183, 138, 0.08);
     padding: 3px 10px;
     border-radius: 999px;
-    align-self: flex-start;
+  }
+  .corner {
+    display: flex;
+    gap: 4px;
+  }
+  .icon {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    color: #d7d2c4;
+    width: 26px;
+    height: 26px;
+    display: grid;
+    place-items: center;
+    border-radius: 6px;
+    cursor: pointer;
+    padding: 0;
+    font-size: 13px;
+    line-height: 1;
+  }
+  .icon:hover {
+    background: rgba(255, 255, 255, 0.12);
   }
   .time {
-    font-size: 56px;
+    font-size: 52px;
     font-weight: 200;
     letter-spacing: -1px;
     line-height: 1;
-    margin: 6px 0;
+    margin: 4px 0 0;
   }
 </style>
