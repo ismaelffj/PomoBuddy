@@ -33,11 +33,14 @@
   </g>
   <text
     x="0"
-    y="6"
+    y="0"
     text-anchor="middle"
-    font-size="14"
-    font-family="ui-rounded, system-ui"
+    dominant-baseline="central"
+    font-size="24"
+    font-family="ui-monospace, 'SF Mono', Menlo, Consolas, monospace"
+    font-weight="600"
     fill="#3a2f24"
+    style="font-variant-numeric: tabular-nums;"
   >
     {label}
   </text>
