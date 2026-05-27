@@ -290,6 +290,7 @@ type PhaseEndedEvent = {
   completedPhase: Phase;   // the phase that just ended — use this for notification copy + history
   nextPhase: Phase;        // the phase that will start when the user clicks Start
   natural: true;           // always true; skip() does NOT emit this event
+  startedAt: number;       // epoch ms when this phase first ran (the original anchor, before any pauses)
   endedAt: number;         // epoch ms
   sessionIndex: number;    // 1-based within the current long-break cycle
 };
