@@ -55,6 +55,12 @@
     {phaseLabel}
   </div>
 
+  <div class="corner-actions">
+    <button class="icon" on:click={actions.onToggleMode} aria-label="Compact mode">⛶</button>
+    <button class="icon" on:click={actions.onOpenHistory} aria-label="History">📊</button>
+    <button class="icon" on:click={actions.onOpenSettings} aria-label="Settings">⚙</button>
+  </div>
+
   <div
     class="clock-slot"
     style="
@@ -86,9 +92,6 @@
       onSkip={actions.onSkip}
       onExtend={actions.onExtend}
       onReset={actions.onReset}
-      onToggleMode={actions.onToggleMode}
-      onOpenSettings={actions.onOpenSettings}
-      onOpenHistory={actions.onOpenHistory}
     />
   </div>
 </div>
@@ -130,6 +133,31 @@
     border-radius: 999px;
     backdrop-filter: blur(6px);
     font-family: ui-rounded, system-ui;
+  }
+  .corner-actions {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    display: flex;
+    gap: 6px;
+  }
+  .corner-actions .icon {
+    background: rgba(20, 15, 12, 0.55);
+    backdrop-filter: blur(6px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: #f0e6d4;
+    width: 30px;
+    height: 30px;
+    display: grid;
+    place-items: center;
+    border-radius: 8px;
+    cursor: pointer;
+    padding: 0;
+    font-size: 14px;
+    line-height: 1;
+  }
+  .corner-actions .icon:hover {
+    background: rgba(20, 15, 12, 0.8);
   }
   .clock-slot {
     position: absolute;

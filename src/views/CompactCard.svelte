@@ -47,8 +47,6 @@
     onSkip={actions.onSkip}
     onExtend={actions.onExtend}
     onReset={actions.onReset}
-    onToggleMode={actions.onToggleMode}
-    onOpenSettings={actions.onOpenSettings}
   />
 </div>
 
