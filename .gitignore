@@ -1,0 +1,22 @@
+# Brainstorming artifacts (visual companion sessions)
+.superpowers/
+
+# macOS
+.DS_Store
+
+# Node
+node_modules/
+dist/
+.svelte-kit/
+*.log
+
+# Rust / Tauri
+src-tauri/target/
+
+# IDE
+.vscode/
+.idea/
+
+# Env
+.env
+.env.local
