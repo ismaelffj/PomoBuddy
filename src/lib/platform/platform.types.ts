@@ -3,6 +3,7 @@ export interface Platform {
   resourceDir(): Promise<string>;
   readTextFile(path: string): Promise<string>;
   readDir(path: string): Promise<string[]>;
+  getSceneRoots(): Promise<string[]>;
 
   writeSettingsAtomic(json: string): Promise<void>;
   appendHistoryLine(line: string): Promise<void>;

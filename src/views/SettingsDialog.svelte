@@ -282,7 +282,8 @@
   }
   .body {
     padding: 14px 18px;
-    max-height: 60vh;
+    /* Fixed height keeps the dialog from jumping when switching tabs. */
+    height: clamp(340px, 55vh, 480px);
     overflow: auto;
   }
   .row {

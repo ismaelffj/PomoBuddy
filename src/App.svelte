@@ -9,7 +9,7 @@
   import { createModeStore, type Mode } from "./lib/stores/mode";
   import { loadAllScenes } from "./lib/scenes/SceneLoader";
   import type { LoadedScene } from "./lib/scenes/scene.types";
-  import { tintNow } from "./lib/scenes/timeOfDay";
+  import { tintForHour, tintNow } from "./lib/scenes/timeOfDay";
   import { createNotifier } from "./lib/notify/Notifier";
   import type { Settings } from "./lib/stores/settings.types";
   import FullScene from "./views/FullScene.svelte";
@@ -119,13 +119,18 @@
     onOpenHistory: () => (showHistory = true),
   };
 
-  $: tint = activeScene
-    ? tintNow(
-        activeScene.manifest.timeOfDay.mode === "tint"
-          ? activeScene.manifest.timeOfDay.tints
-          : { morning: "#ffffff", midday: "#ffffff", dusk: "#ffffff", night: "#000000" },
-      )
-    : "#000000";
+  // Map locked modes to the wall-clock anchor each scene defines for that
+  // time of day. "auto" follows real wall-clock time.
+  const ANCHOR_HOURS = { morning: 6, midday: 12, dusk: 18, night: 0 } as const;
+
+  $: tint = (() => {
+    if (!activeScene) return "#000000";
+    if (activeScene.manifest.timeOfDay.mode !== "tint") return "#ffffff";
+    const tints = activeScene.manifest.timeOfDay.tints;
+    const mode = $settings?.scene.timeOfDayMode ?? "auto";
+    if (mode === "auto") return tintNow(tints);
+    return tintForHour(ANCHOR_HOURS[mode], tints);
+  })();
 </script>
 
 {#if ready && settings && history}

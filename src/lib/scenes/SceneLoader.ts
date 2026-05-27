@@ -11,8 +11,7 @@ import type { LoadedScene } from "./scene.types";
 const LAUNCH_TOKEN = Date.now().toString(36);
 
 export async function loadAllScenes(platform: Platform): Promise<LoadedScene[]> {
-  const [resource, appData] = await Promise.all([platform.resourceDir(), platform.appDataDir()]);
-  const roots = [`${resource}/scenes`, `${appData}/scenes`];
+  const roots = await platform.getSceneRoots();
 
   const scenes: LoadedScene[] = [];
   for (const root of roots) {

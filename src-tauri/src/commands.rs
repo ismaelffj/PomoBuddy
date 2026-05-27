@@ -3,6 +3,39 @@ use std::io::{Read, Write};
 use std::path::PathBuf;
 use tauri::Manager;
 
+#[tauri::command]
+pub fn get_scene_roots(app: tauri::AppHandle) -> Result<Vec<String>, String> {
+    // Bundled scenes:
+    //   - in dev (debug builds) the bundle hasn't been staged, so we
+    //     point straight at the source repo's scenes/ folder using
+    //     CARGO_MANIFEST_DIR (set by Cargo at compile time to src-tauri/)
+    //   - in release we look inside the .app's Resources/_up_/scenes
+    //     (Tauri prepends _up_ when bundle.resources walks above the
+    //     project root with "../scenes")
+    let bundled: PathBuf = if cfg!(debug_assertions) {
+        PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("..")
+            .join("scenes")
+    } else {
+        app.path()
+            .resource_dir()
+            .map_err(|e| format!("resource_dir failed: {e}"))?
+            .join("_up_")
+            .join("scenes")
+    };
+
+    let user = app
+        .path()
+        .app_data_dir()
+        .map_err(|e| format!("app_data_dir failed: {e}"))?
+        .join("scenes");
+
+    Ok(vec![
+        bundled.to_string_lossy().to_string(),
+        user.to_string_lossy().to_string(),
+    ])
+}
+
 fn app_data_dir(app: &tauri::AppHandle) -> Result<PathBuf, String> {
     app.path()
         .app_data_dir()

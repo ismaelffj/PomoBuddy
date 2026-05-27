@@ -27,6 +27,7 @@ function platformWith(scenes: Record<string, Record<string, string>>): Platform 
   return {
     appDataDir: async () => "/app",
     resourceDir: async () => "/res",
+    getSceneRoots: async () => ["/res/scenes", "/app/scenes"],
     readTextFile: async (path) => {
       for (const dir in scenes) {
         for (const file in scenes[dir]) {
