@@ -41,6 +41,18 @@ CI runs all four on every PR (see [.github/workflows/ci.yml](.github/workflows/c
 Before tagging a release, run through the
 [release smoke checklist](docs/release-checklist.md) manually.
 
+## Editing the app icon
+
+The master is `src-tauri/icons/icon.svg`. After editing, run:
+
+```bash
+./scripts/build-icon.sh
+```
+
+This re-renders the SVG at 1024px, generates the full `.iconset` (10 sizes), bundles
+`icon.icns` via `iconutil`, and copies the individually-listed PNGs Tauri references.
+All tools (`qlmanage`, `sips`, `iconutil`) are built into macOS.
+
 ## Submitting a scene pack
 
 This is the easiest way to contribute.
