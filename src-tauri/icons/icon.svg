@@ -1,0 +1,94 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#d68866"/>
+      <stop offset="100%" stop-color="#bf6e4f"/>
+    </linearGradient>
+    <radialGradient id="faceShade" cx="0.45" cy="0.4" r="0.7">
+      <stop offset="0%" stop-color="#fbf3e2"/>
+      <stop offset="100%" stop-color="#e8dec5"/>
+    </radialGradient>
+  </defs>
+
+  <!-- macOS squircle background.
+       Path approximates the Apple "squircle" using cubic Bezier curves
+       at each corner instead of plain circular rounding. -->
+  <path d="
+    M 230,0
+    H 794
+    C 924,0 1024,100 1024,230
+    V 794
+    C 1024,924 924,1024 794,1024
+    H 230
+    C 100,1024 0,924 0,794
+    V 230
+    C 0,100 100,0 230,0
+    Z" fill="url(#bg)"/>
+
+  <!-- soft inner highlight for depth -->
+  <path d="
+    M 230,40
+    H 794
+    C 900,40 984,124 984,230
+    V 350
+    C 984,250 894,180 794,180
+    H 230
+    C 130,180 40,250 40,350
+    V 230
+    C 40,124 124,40 230,40
+    Z" fill="rgba(255,255,255,0.10)"/>
+
+  <!-- clock body shadow -->
+  <ellipse cx="512" cy="752" rx="330" ry="38" fill="rgba(0,0,0,0.18)"/>
+
+  <!-- clock face -->
+  <circle cx="512" cy="512" r="340" fill="url(#faceShade)" stroke="#3a2f24" stroke-width="40"/>
+
+  <!-- countdown arc: shows ~58% remaining (terracotta sweep from 12 o'clock) -->
+  <!-- circumference of r=288 is ~1810; offset of 760 covers ~42% elapsed -->
+  <circle
+    cx="512"
+    cy="512"
+    r="288"
+    fill="none"
+    stroke="#3a2f24"
+    stroke-width="16"
+    stroke-linecap="round"
+    stroke-dasharray="1810"
+    stroke-dashoffset="760"
+    transform="rotate(-90 512 512)"
+    opacity="0.92"
+  />
+
+  <!-- four hour ticks (12, 3, 6, 9) -->
+  <g stroke="#3a2f24" stroke-width="22" stroke-linecap="round">
+    <line x1="512" y1="228" x2="512" y2="278"/>
+    <line x1="796" y1="512" x2="746" y2="512"/>
+    <line x1="512" y1="796" x2="512" y2="746"/>
+    <line x1="228" y1="512" x2="278" y2="512"/>
+  </g>
+
+  <!-- twelve small minute ticks (every hour position) -->
+  <g stroke="#3a2f24" stroke-width="9" stroke-linecap="round" opacity="0.65">
+    <line x1="654" y1="266" x2="640" y2="290"/>
+    <line x1="758" y1="370" x2="734" y2="384"/>
+    <line x1="758" y1="654" x2="734" y2="640"/>
+    <line x1="654" y1="758" x2="640" y2="734"/>
+    <line x1="370" y1="758" x2="384" y2="734"/>
+    <line x1="266" y1="654" x2="290" y2="640"/>
+    <line x1="266" y1="370" x2="290" y2="384"/>
+    <line x1="370" y1="266" x2="384" y2="290"/>
+  </g>
+
+  <!-- minute hand -->
+  <line x1="512" y1="512" x2="512" y2="300"
+        stroke="#3a2f24" stroke-width="26" stroke-linecap="round"/>
+
+  <!-- hour hand -->
+  <line x1="512" y1="512" x2="660" y2="600"
+        stroke="#3a2f24" stroke-width="32" stroke-linecap="round"/>
+
+  <!-- center pin -->
+  <circle cx="512" cy="512" r="30" fill="#3a2f24"/>
+  <circle cx="512" cy="512" r="10" fill="#d68866"/>
+</svg>
