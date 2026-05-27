@@ -238,27 +238,81 @@ A scene is a folder containing a `scene.json` manifest plus image assets. Bundle
 
 `SceneLoader` validates each manifest against a Zod schema on load. Invalid scenes are skipped with a logged error, never crash the app.
 
+### 6.3 Security: scene asset paths
+
+Scene packs are user-supplied content — especially those dropped into `~/Library/Application Support/PomoBuddy/scenes/`. A malicious or careless `scene.json` could try to reference files outside its folder. `SceneLoader` enforces the following on every asset reference in a manifest (`layers.*`, `timeOfDay.variants.*`, `preview`):
+
+- Path must be a **relative string** — no leading `/`, no `file://`, no drive letters or UNC prefixes.
+- Path may not contain any `..` segments.
+- After normalization, the resolved absolute path must still be inside the scene's own folder. Anything resolving outside is rejected.
+- Extension must be in an allowlist: `.webp`, `.png`, `.jpg`, `.jpeg`.
+
+Tauri's asset protocol is configured with a **narrow scope** (`app.security.assetProtocol.scope` in `tauri.conf.json`) covering exactly two roots:
+
+- the bundled `scenes/` directory inside the app
+- the user `scenes/` directory under `appDataDir`
+
+Anything outside those roots will not load even if a manifest tries. A scene that fails any of these checks is rejected at load time with a logged error and excluded from the picker — it never reaches the WebView.
+
 ## 7. Core components
 
 ### 7.1 TimerEngine (`src/lib/timer/`)
 
-Pure TypeScript, no DOM, no Tauri. Owns the phase state machine:
+Pure TypeScript, no DOM, no Tauri. Owns the phase state machine.
+
+**Phase cycle** (the order phases follow within one Pomodoro cycle — *not* an auto-advance loop):
 
 ```
-idle → focus → shortBreak → focus → shortBreak → focus → shortBreak → focus → longBreak → idle
-                                                                                  (cycle repeats)
+focus → shortBreak → focus → shortBreak → focus → shortBreak → focus → longBreak → (cycle repeats)
+```
+
+**Per-phase state machine** — the engine never crosses a phase boundary on its own; the user must click Start to leave `ended`:
+
+```
+            ┌──────────┐  remaining → 0   ┌────────┐
+  start ──▶ │ RUNNING  │ ───────────────▶ │ ENDED  │ ── emits PhaseEndedEvent
+            └────┬─────┘                  └────────┘
+   pause ↕      │                              │
+            ┌────▼─────┐                       │ user clicks Start
+            │  PAUSED  │                       ▼
+            └──────────┘                  (RUNNING with nextPhase)
 ```
 
 **States:** `idle`, `running`, `paused`, `ended`
 **Phases:** `focus`, `shortBreak`, `longBreak`
-**Actions:** `start()`, `pause()`, `resume()`, `skip()`, `extend(minutes)`, `reset()`, `tick()`
+**Actions:** `start()`, `pause()`, `resume()`, `skip()`, `extend(minutes)`, `reset()`
 
-**Semantics:**
-- `skip()` advances to the next phase **without** firing the notification or logging history (it's a quiet abort, by design).
-- A focus session is logged to history only on natural phase-end (`remaining === 0`), not on skip.
-- `extend(5)` adds 5 minutes to `remaining` while running.
+**The single event the engine emits:**
+
+```ts
+// Emitted exactly once when a phase reaches remaining === 0 naturally
+type PhaseEndedEvent = {
+  completedPhase: Phase;   // the phase that just ended — use this for notification copy + history
+  nextPhase: Phase;        // the phase that will start when the user clicks Start
+  natural: true;           // always true; skip() does NOT emit this event
+  endedAt: number;         // epoch ms
+  sessionIndex: number;    // 1-based within the current long-break cycle
+};
+```
+
+This explicit shape prevents `Notifier` or `HistoryStore` from accidentally using `nextPhase` where `completedPhase` was meant.
+
+**Tick semantics — wall-clock anchored, not interval-counted:**
+
+The engine stores `phaseStartedAt` (epoch ms), `phaseDurationMs`, and `pausedOffsetMs`. Every tick computes `remaining = phaseDurationMs - (Date.now() - phaseStartedAt - pausedOffsetMs)`. A `setInterval` at ~250 ms drives **repaints only** — it does not advance state. This keeps the timer correct across:
+
+- System sleep / wake
+- macOS App Nap (Tauri windows can be napped when occluded)
+- Throttled background execution (relevant for the future web build)
+- Event-loop stalls
+
+On `pause`, the elapsed time since the last anchor is folded into `pausedOffsetMs` on `resume`. On `skip`, `extend(n)`, and `reset`, the anchors are recomputed.
+
+**Action semantics:**
+- `skip()` advances to the next phase **without** emitting `PhaseEndedEvent`, firing notifications, or logging history (it's a quiet abort, by design).
+- A focus session is logged to history only on natural phase-end, never on skip.
+- `extend(5)` adds 5 minutes to `phaseDurationMs` while running (or paused).
 - `reset()` returns to `idle` with phase set to the start of the current cycle.
-- Tick runs at 1Hz via `setInterval`; on `pause` the interval is cleared.
 
 ### 7.2 SceneLoader (`src/lib/scenes/`)
 
@@ -280,9 +334,9 @@ type Settings = {
 };
 ```
 
-- Persists to `settings.json` on every change (debounced 500 ms)
+- Persists to `settings.json` on every change (debounced 500 ms), via the atomic write described in §9
 - On load: validate with Zod; on failure, write a `.bak` of the corrupt file and fall back to defaults
-- No "Apply" button — settings live-apply. The dialog's Done/Cancel just closes the modal.
+- Settings live-apply. The dialog has a single **Close** button (no Cancel — there's nothing to roll back).
 
 ### 7.4 HistoryStore (`src/lib/stores/history.ts`)
 
@@ -293,12 +347,12 @@ type Settings = {
 
 ### 7.5 Notifier (`src/lib/notify/`)
 
-Single function `notifyPhaseEnd(phase: Phase)`. Reads `SettingsStore.notifications` and dispatches to enabled channels:
+Single function `notifyPhaseEnd(event: PhaseEndedEvent)`. Uses `event.completedPhase` for notification copy and history. Reads `SettingsStore.notifications` and dispatches to enabled channels:
 
-- **banner** → `tauri-plugin-notification` `Notification.show()` (requests permission on first enable; if denied, toggle stays off + Settings shows a hint linking to System Settings)
-- **inApp** → emits a custom event the `FullScene` view picks up to play a Svelte transition
-- **chime** → HTML5 `Audio` plays `assets/chime.wav`
-- **dockBounce** → Tauri `app.requestUserAttention(critical)`
+- **banner** → `@tauri-apps/plugin-notification`: `isPermissionGranted()` → `requestPermission()` if needed → `sendNotification({ title, body })`. If permission is denied, the toggle in Settings stays off and a hint shows linking to System Settings → Notifications.
+- **inApp** → emits a custom event the `FullScene` view picks up to play a Svelte transition.
+- **chime** → HTML5 `Audio` plays `assets/chime.wav`.
+- **dockBounce** → `@tauri-apps/api/window`: `getCurrentWindow().requestUserAttention(UserAttentionType.Critical)`.
 
 A disabled channel never fires. Each channel is independent.
 
@@ -336,8 +390,8 @@ history.jsonl       ← append-only focus-session log
 scenes/             ← user-installed scene packs (optional)
 ```
 
-- `settings.json` is a single JSON object validated against a Zod schema on load. Corrupt → `.bak` + defaults.
-- `history.jsonl` is append-only and crash-safe — a partial write only loses the tail line. Tallies are computed at startup and maintained incrementally.
+- **`settings.json` — atomic write.** Writes go to `settings.json.tmp` first; after `fsync`, the temp file is renamed over `settings.json`. A crash mid-write leaves the previous good file intact. Validated against a Zod schema on load; corrupt → `.bak` of the bad file + defaults.
+- **`history.jsonl` — atomic append.** Appends are performed by a small Rust Tauri command using `OpenOptions::new().create(true).append(true).open(...)`. A single line write is atomic on POSIX as long as it's under `PIPE_BUF` (4 KB), which a history entry comfortably is. The startup parser **tolerates a truncated final line**: any line that fails to parse as JSON is dropped with a warning, and the rest of the file is used. Tallies are computed at startup and maintained incrementally.
 - **No sync, no cloud, no telemetry in v1.** The README states this explicitly.
 
 ## 10. Testing strategy
@@ -346,14 +400,21 @@ Scaled to scope — full coverage where bugs hurt most, manual smoke for the res
 
 | Layer | Tested how | Why |
 |---|---|---|
-| `TimerEngine` | Vitest unit tests covering every transition, skip, extend, reset, long-break cycle | Bugs here = wrong session counts. Full coverage. |
+| `TimerEngine` | Vitest unit tests covering every transition, skip, extend, reset, long-break cycle. Uses `vi.useFakeTimers()` plus a controllable wall-clock (inject `now()` into the engine) for explicit time-travel tests: large jumps forward (simulating sleep/wake), small jitter, and event-loop stalls. | Bugs here = wrong session counts or drift after sleep. Full coverage. |
 | `SceneLoader` validation | Vitest with fixture valid/invalid `scene.json` | Contribution interface — broken scenes must be rejected with clear errors, not crash. |
 | `SettingsStore` / `HistoryStore` | Vitest contract tests with mocked FS | Persistence corruption fallback needs a real test. |
 | `Notifier` | Vitest with mocked Tauri APIs; verify routing matches settings | A disabled channel must never fire. |
 | Svelte views | Manual checklist in `CONTRIBUTING.md` | Views are thin; automated snapshots cost more than they catch at this scale. |
 | End-to-end | Manual smoke checklist in `docs/release-checklist.md` | Cheaper than maintaining Playwright for one platform / one person. |
 
-CI (GitHub Actions) runs `npm test` + `npm run check` + `npm run lint` on every PR. Tauri build is **not** in CI for v1 (slow, adds little value for a single-platform target you build locally). Reconsider when adding Windows/Linux.
+CI (GitHub Actions) runs on every PR:
+
+- `npm test` — Vitest suite
+- `npm run check` — Svelte type check
+- `npm run lint` — ESLint + Prettier
+- `cargo check --manifest-path src-tauri/Cargo.toml` — type-checks the Rust shell and surfaces broken capability config / missing plugin permissions / bad bundled resource paths without producing a binary (fast, ~10–30s)
+
+A full Tauri debug build runs only on release branches and on demand — it's slow and adds little PR value for a single-platform target. Reconsider routine full builds when adding Windows/Linux.
 
 ## 11. Risks
 
