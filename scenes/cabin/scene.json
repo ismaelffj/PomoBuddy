@@ -1,0 +1,24 @@
+{
+  "id": "cabin",
+  "name": "Cozy Cabin",
+  "author": "PomoBuddy",
+  "license": "CC0-1.0",
+  "version": 1,
+  "layers": { "background": "background.png" },
+  "preview": "preview.png",
+  "clock": { "x": 0.78, "y": 0.22, "diameter": 0.18, "face": "warm-cream" },
+  "phaseTag": { "x": 0.04, "y": 0.06 },
+  "palette": { "primary": "#c97a5a", "accent": "#c9b78a", "ink": "#3a2f24" },
+  "timeOfDay": {
+    "mode": "tint",
+    "tints": {
+      "morning": "#f0c79a",
+      "midday": "#ffffff",
+      "dusk": "#c97a5a",
+      "night": "#4a5868"
+    }
+  },
+  "responsive": {
+    "portrait": { "clock": { "x": 0.72, "y": 0.18, "diameter": 0.28 } }
+  }
+}

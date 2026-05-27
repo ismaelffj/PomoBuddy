@@ -1,0 +1,21 @@
+{
+  "id": "cafe",
+  "name": "Lofi Cafe",
+  "author": "PomoBuddy",
+  "license": "CC0-1.0",
+  "version": 1,
+  "layers": { "background": "background.png" },
+  "preview": "preview.png",
+  "clock": { "x": 0.22, "y": 0.18, "diameter": 0.16, "face": "warm-cream" },
+  "phaseTag": { "x": 0.04, "y": 0.06 },
+  "palette": { "primary": "#6c8a5e", "accent": "#c9b78a", "ink": "#2d3a2a" },
+  "timeOfDay": {
+    "mode": "tint",
+    "tints": {
+      "morning": "#f0c79a",
+      "midday": "#ffffff",
+      "dusk": "#d8a06c",
+      "night": "#3a4452"
+    }
+  }
+}
