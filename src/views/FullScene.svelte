@@ -38,7 +38,9 @@
     diameter: 0.2,
     face: "warm-cream",
   };
-  $: tagPos = scene?.manifest.phaseTag ?? { x: 0.04, y: 0.06 };
+  // Phase tag is anchored to the top-left corner of the window so it
+  // stays clear of the wall-clock area on any scene (the manifest's
+  // phaseTag.x/y are kept for forward compat but no longer used).
 </script>
 
 <div class="stage">
@@ -53,7 +55,7 @@
 
   <div class="tint" style="background-color: {tint}"></div>
 
-  <div class="phase-tag" style="left: {tagPos.x * 100}%; top: {tagPos.y * 100}%;">
+  <div class="phase-tag">
     {phaseLabel}
   </div>
 
@@ -136,15 +138,22 @@
   }
   .phase-tag {
     position: absolute;
+    top: 12px;
+    left: 12px;
+    /* Match the corner icons' 30px height so the pill and icons baseline together. */
+    height: 30px;
+    display: flex;
+    align-items: center;
     background: rgba(20, 15, 12, 0.55);
     color: #f0e6d4;
     font-size: 11px;
     letter-spacing: 1.5px;
     text-transform: uppercase;
-    padding: 4px 12px;
+    padding: 0 14px;
     border-radius: 999px;
     backdrop-filter: blur(6px);
     font-family: ui-rounded, system-ui;
+    z-index: 5;
   }
   .corner-actions {
     position: absolute;
@@ -152,6 +161,7 @@
     right: 12px;
     display: flex;
     gap: 6px;
+    z-index: 5;
   }
   .corner-actions .icon {
     background: rgba(20, 15, 12, 0.55);
