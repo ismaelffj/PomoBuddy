@@ -391,7 +391,7 @@ scenes/             ← user-installed scene packs (optional)
 ```
 
 - **`settings.json` — atomic write.** Writes go to `settings.json.tmp` first; after `fsync`, the temp file is renamed over `settings.json`. A crash mid-write leaves the previous good file intact. Validated against a Zod schema on load; corrupt → `.bak` of the bad file + defaults.
-- **`history.jsonl` — atomic append.** Appends are performed by a small Rust Tauri command using `OpenOptions::new().create(true).append(true).open(...)`. A single line write is atomic on POSIX as long as it's under `PIPE_BUF` (4 KB), which a history entry comfortably is. The startup parser **tolerates a truncated final line**: any line that fails to parse as JSON is dropped with a warning, and the rest of the file is used. Tallies are computed at startup and maintained incrementally.
+- **`history.jsonl` — single-process append.** Appends are performed by a small Rust Tauri command using `OpenOptions::new().create(true).append(true).open(...)`. There is only one writer (the app itself), so there are no concurrent-append concerns. The startup parser **tolerates a truncated final line**: any line that fails to parse as JSON is dropped with a warning, and the rest of the file is used — so a crash mid-write costs at most one entry. Tallies are computed at startup and maintained incrementally.
 - **No sync, no cloud, no telemetry in v1.** The README states this explicitly.
 
 ## 10. Testing strategy
@@ -436,7 +436,7 @@ A full Tauri debug build runs only on release branches and on demand — it's sl
 - [ ] Light history: today / this week tallies
 - [ ] README with install instructions + screenshots
 - [ ] MIT license, CONTRIBUTING.md with scene-pack guide
-- [ ] CI: `npm test` + `npm run check` + `npm run lint` on PRs
+- [ ] CI: `npm test` + `npm run check` + `npm run lint` + `cargo check --manifest-path src-tauri/Cargo.toml` on PRs
 
 ## 13. Parking lot (post-v1)
 
