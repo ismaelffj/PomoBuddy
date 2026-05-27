@@ -17,7 +17,10 @@ export default [
     plugins: { "@typescript-eslint": ts },
     rules: {
       ...ts.configs.recommended.rules,
-      "@typescript-eslint/no-unused-vars": ["warn", { argsIgnorePattern: "^_" }],
+      "@typescript-eslint/no-unused-vars": [
+        "warn",
+        { argsIgnorePattern: "^_", varsIgnorePattern: "^_" },
+      ],
     },
   },
   {
@@ -27,9 +30,14 @@ export default [
       parserOptions: { parser: tsParser },
       globals: { ...globals.browser },
     },
-    plugins: { svelte },
+    plugins: { svelte, "@typescript-eslint": ts },
     rules: {
       ...svelte.configs.recommended.rules,
+      "no-unused-vars": "off",
+      "@typescript-eslint/no-unused-vars": [
+        "warn",
+        { argsIgnorePattern: "^_", varsIgnorePattern: "^_" },
+      ],
     },
   },
   {

@@ -9,8 +9,11 @@
 
   let tab: "timer" | "scene" | "notifications" = "timer";
 
-  function toggleBool(get: (s: Settings) => boolean, set: (s: Settings, v: boolean) => Settings) {
-    settings.update((s) => set(s, !get(s)));
+  function toggleBool(
+    read: (cur: Settings) => boolean,
+    write: (cur: Settings, value: boolean) => Settings,
+  ) {
+    settings.update((cur) => write(cur, !read(cur)));
   }
 </script>
 
