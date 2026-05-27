@@ -3,10 +3,14 @@
 # and the .icns bundle Tauri uses. Idempotent — safe to run on every edit
 # of the master SVG.
 #
-# Requirements (all built into macOS):
-#   - qlmanage  (render SVG → 1024px PNG)
-#   - sips      (resize)
-#   - iconutil  (build .icns from .iconset)
+# Requirements:
+#   - node + sharp (SVG → 1024px PNG with proper alpha; sharp is a devDep)
+#   - sips     (resize)         — macOS built-in
+#   - iconutil (build .icns)    — macOS built-in
+#
+# Why not qlmanage: it formally writes RGBA but composites the
+# transparent corners as opaque white, giving the dock icon white
+# corners around the squircle.
 #
 # Usage:  ./scripts/build-icon.sh [path/to/icon.svg]
 #
@@ -35,13 +39,17 @@ fi
 WORK="$(mktemp -d -t pomobuddy-icon)"
 trap 'rm -rf "$WORK"' EXIT
 
-echo "→ rendering $SVG @ 1024px"
-qlmanage -t -s 1024 -o "$WORK" "$SVG" >/dev/null
-
-# qlmanage names the output after the source file
-SRC_PNG="$WORK/$(basename "$SVG").png"
+echo "→ rendering $SVG @ 1024px (sharp, preserves alpha)"
+SRC_PNG="$WORK/icon-1024.png"
+node --input-type=module -e "
+  import sharp from 'sharp';
+  await sharp('$SVG')
+    .resize(1024, 1024, { fit: 'contain', background: { r: 0, g: 0, b: 0, alpha: 0 } })
+    .png()
+    .toFile('$SRC_PNG');
+"
 if [[ ! -f "$SRC_PNG" ]]; then
-  echo "error: qlmanage did not produce $SRC_PNG" >&2
+  echo "error: sharp did not produce $SRC_PNG" >&2
   exit 1
 fi
 
