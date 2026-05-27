@@ -1,4 +1,4 @@
-const ALLOWED_EXTENSIONS = [".webp", ".png", ".jpg", ".jpeg"];
+const ALLOWED_EXTENSIONS = [".webp", ".png", ".jpg", ".jpeg", ".svg"];
 
 export function isSafeRelativeAsset(input: string): boolean {
   if (typeof input !== "string") return false;
