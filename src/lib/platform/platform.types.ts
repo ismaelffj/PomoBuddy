@@ -1,9 +1,15 @@
+export interface RawSceneInfo {
+  id: string;
+  baseDir: string;
+  manifestJson: string;
+}
+
 export interface Platform {
   appDataDir(): Promise<string>;
   resourceDir(): Promise<string>;
   readTextFile(path: string): Promise<string>;
   readDir(path: string): Promise<string[]>;
-  getSceneRoots(): Promise<string[]>;
+  loadScenes(): Promise<RawSceneInfo[]>;
 
   writeSettingsAtomic(json: string): Promise<void>;
   appendHistoryLine(line: string): Promise<void>;

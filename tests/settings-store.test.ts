@@ -14,7 +14,7 @@ function makePlatform(initial?: string): MockPlatform {
   return {
     appDataDir: async () => "/app",
     resourceDir: async () => "/res",
-    getSceneRoots: async () => ["/res/scenes", "/app/scenes"],
+    loadScenes: async () => [],
     readTextFile: async () => {
       if (stored === undefined) throw new Error("ENOENT");
       return stored;

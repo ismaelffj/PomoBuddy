@@ -23,8 +23,8 @@ export const tauriPlatform: Platform = {
     const entries = await readDir(path);
     return entries.filter((e) => e.isDirectory).map((e) => e.name ?? "");
   },
-  async getSceneRoots() {
-    return invoke<string[]>("get_scene_roots");
+  async loadScenes() {
+    return invoke<import("./platform.types").RawSceneInfo[]>("load_scenes");
   },
   async writeSettingsAtomic(json) {
     await invoke("write_settings_atomic", { json });

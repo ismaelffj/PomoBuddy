@@ -13,7 +13,7 @@ function fakePlatform() {
     requestUserAttentionCritical: vi.fn().mockResolvedValue(undefined),
     appDataDir: async () => "",
     resourceDir: async () => "",
-    getSceneRoots: async () => [],
+    loadScenes: async () => [],
     readTextFile: async () => "",
     readDir: async () => [],
     writeSettingsAtomic: async () => {},

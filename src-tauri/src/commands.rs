@@ -3,15 +3,21 @@ use std::io::{Read, Write};
 use std::path::PathBuf;
 use tauri::Manager;
 
+#[derive(serde::Serialize)]
+pub struct SceneInfo {
+    pub id: String,
+    #[serde(rename = "baseDir")]
+    pub base_dir: String,
+    #[serde(rename = "manifestJson")]
+    pub manifest_json: String,
+}
+
 #[tauri::command]
-pub fn get_scene_roots(app: tauri::AppHandle) -> Result<Vec<String>, String> {
+pub fn load_scenes(app: tauri::AppHandle) -> Result<Vec<SceneInfo>, String> {
     // Bundled scenes:
-    //   - in dev (debug builds) the bundle hasn't been staged, so we
-    //     point straight at the source repo's scenes/ folder using
-    //     CARGO_MANIFEST_DIR (set by Cargo at compile time to src-tauri/)
-    //   - in release we look inside the .app's Resources/_up_/scenes
-    //     (Tauri prepends _up_ when bundle.resources walks above the
-    //     project root with "../scenes")
+    //   - debug: CARGO_MANIFEST_DIR/../scenes (the source repo)
+    //   - release: resource_dir/_up_/scenes (Tauri prepends _up_ for
+    //     paths that walk above the project root in bundle.resources)
     let bundled: PathBuf = if cfg!(debug_assertions) {
         PathBuf::from(env!("CARGO_MANIFEST_DIR"))
             .join("..")
@@ -30,10 +36,46 @@ pub fn get_scene_roots(app: tauri::AppHandle) -> Result<Vec<String>, String> {
         .map_err(|e| format!("app_data_dir failed: {e}"))?
         .join("scenes");
 
-    Ok(vec![
-        bundled.to_string_lossy().to_string(),
-        user.to_string_lossy().to_string(),
-    ])
+    let mut scenes = Vec::new();
+    for root in [&bundled, &user] {
+        if !root.is_dir() {
+            continue;
+        }
+        let entries = match fs::read_dir(root) {
+            Ok(e) => e,
+            Err(err) => {
+                log::warn!("read_dir {root:?} failed: {err}");
+                continue;
+            }
+        };
+        for entry in entries.flatten() {
+            let path = entry.path();
+            if !path.is_dir() {
+                continue;
+            }
+            let manifest_path = path.join("scene.json");
+            let manifest_json = match fs::read_to_string(&manifest_path) {
+                Ok(j) => j,
+                Err(_) => continue,
+            };
+            let id = path
+                .file_name()
+                .and_then(|n| n.to_str())
+                .unwrap_or_default()
+                .to_string();
+            let base_dir = match path.canonicalize() {
+                Ok(p) => p.to_string_lossy().to_string(),
+                Err(_) => path.to_string_lossy().to_string(),
+            };
+            scenes.push(SceneInfo {
+                id,
+                base_dir,
+                manifest_json,
+            });
+        }
+    }
+    log::info!("load_scenes: found {} scene(s)", scenes.len());
+    Ok(scenes)
 }
 
 fn app_data_dir(app: &tauri::AppHandle) -> Result<PathBuf, String> {

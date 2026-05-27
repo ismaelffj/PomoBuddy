@@ -8,7 +8,7 @@ function platformWithHistory(initial: string): Platform {
   return {
     appDataDir: async () => "/app",
     resourceDir: async () => "/res",
-    getSceneRoots: async () => ["/res/scenes", "/app/scenes"],
+    loadScenes: async () => [],
     readTextFile: async () => "",
     readDir: async () => [],
     writeSettingsAtomic: async () => {},

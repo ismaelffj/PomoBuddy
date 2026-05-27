@@ -9,7 +9,7 @@ pub fn run() {
             commands::write_settings_atomic,
             commands::append_history_line,
             commands::read_history_file,
-            commands::get_scene_roots,
+            commands::load_scenes,
         ])
         .setup(|app| {
             if cfg!(debug_assertions) {

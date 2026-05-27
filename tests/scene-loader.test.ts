@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { loadAllScenes } from "../src/lib/scenes/SceneLoader";
-import type { Platform } from "../src/lib/platform/platform.types";
+import type { Platform, RawSceneInfo } from "../src/lib/platform/platform.types";
 
 const validManifest = {
   id: "cabin",
@@ -23,25 +23,13 @@ const unsafeManifest = {
   layers: { background: "../escape.webp" },
 };
 
-function platformWith(scenes: Record<string, Record<string, string>>): Platform {
+function platformWith(infos: RawSceneInfo[]): Platform {
   return {
     appDataDir: async () => "/app",
     resourceDir: async () => "/res",
-    getSceneRoots: async () => ["/res/scenes", "/app/scenes"],
-    readTextFile: async (path) => {
-      for (const dir in scenes) {
-        for (const file in scenes[dir]) {
-          if (path === `${dir}/${file}`) return scenes[dir][file];
-        }
-      }
-      throw new Error("ENOENT " + path);
-    },
-    readDir: async (path) => {
-      const prefix = path + "/";
-      return Object.keys(scenes)
-        .filter((d) => d.startsWith(prefix))
-        .map((d) => d.slice(prefix.length).split("/")[0]);
-    },
+    loadScenes: async () => infos,
+    readTextFile: async () => "",
+    readDir: async () => [],
     writeSettingsAtomic: async () => {},
     appendHistoryLine: async () => {},
     readHistoryFile: async () => "",
@@ -57,28 +45,30 @@ function platformWith(scenes: Record<string, Record<string, string>>): Platform 
 
 describe("SceneLoader", () => {
   it("loads a valid bundled scene", async () => {
-    const platform = platformWith({
-      "/res/scenes/cabin": { "scene.json": JSON.stringify(validManifest) },
-    });
+    const platform = platformWith([
+      { id: "cabin", baseDir: "/res/scenes/cabin", manifestJson: JSON.stringify(validManifest) },
+    ]);
     const scenes = await loadAllScenes(platform);
     expect(scenes.map((s) => s.id)).toEqual(["cabin"]);
   });
 
   it("rejects manifests with unsafe asset paths", async () => {
-    const platform = platformWith({
-      "/res/scenes/bad": { "scene.json": JSON.stringify(unsafeManifest) },
-    });
+    const platform = platformWith([
+      { id: "bad", baseDir: "/res/scenes/bad", manifestJson: JSON.stringify(unsafeManifest) },
+    ]);
     const scenes = await loadAllScenes(platform);
     expect(scenes).toEqual([]);
   });
 
   it("merges bundled + user scenes", async () => {
-    const platform = platformWith({
-      "/res/scenes/cabin": { "scene.json": JSON.stringify(validManifest) },
-      "/app/scenes/cafe": {
-        "scene.json": JSON.stringify({ ...validManifest, id: "cafe", name: "Cafe" }),
+    const platform = platformWith([
+      { id: "cabin", baseDir: "/res/scenes/cabin", manifestJson: JSON.stringify(validManifest) },
+      {
+        id: "cafe",
+        baseDir: "/app/scenes/cafe",
+        manifestJson: JSON.stringify({ ...validManifest, id: "cafe", name: "Cafe" }),
       },
-    });
+    ]);
     const scenes = await loadAllScenes(platform);
     expect(scenes.map((s) => s.id).sort()).toEqual(["cabin", "cafe"]);
   });

@@ -11,50 +11,38 @@ import type { LoadedScene } from "./scene.types";
 const LAUNCH_TOKEN = Date.now().toString(36);
 
 export async function loadAllScenes(platform: Platform): Promise<LoadedScene[]> {
-  const roots = await platform.getSceneRoots();
-
+  const infos = await platform.loadScenes();
   const scenes: LoadedScene[] = [];
-  for (const root of roots) {
-    const folders = await tryReadDir(platform, root);
-    for (const folder of folders) {
-      const baseDir = `${root}/${folder}`;
-      const scene = await tryLoadScene(platform, baseDir);
-      if (scene) scenes.push(scene);
-    }
+  for (const info of infos) {
+    const scene = parseScene(platform, info);
+    if (scene) scenes.push(scene);
   }
   return scenes;
 }
 
-async function tryReadDir(platform: Platform, path: string): Promise<string[]> {
+function parseScene(
+  platform: Platform,
+  info: { id: string; baseDir: string; manifestJson: string },
+): LoadedScene | null {
+  let manifest: SceneManifest;
   try {
-    return await platform.readDir(path);
-  } catch {
-    return [];
-  }
-}
-
-async function tryLoadScene(platform: Platform, baseDir: string): Promise<LoadedScene | null> {
-  try {
-    const raw = await platform.readTextFile(`${baseDir}/scene.json`);
-    const parsed = JSON.parse(raw);
-    const manifest = sceneSchema.parse(parsed) as SceneManifest;
-
-    const assetPaths = collectManifestAssetPaths(manifest);
-    for (const p of assetPaths) {
-      if (!isSafeRelativeAsset(p)) {
-        console.warn(`[scenes] rejected ${baseDir}: unsafe path ${JSON.stringify(p)}`);
-        return null;
-      }
-    }
-
-    return {
-      id: manifest.id,
-      manifest,
-      baseDir,
-      assetUrl: (rel) => `${platform.toAssetUrl(`${baseDir}/${rel}`)}?v=${LAUNCH_TOKEN}`,
-    };
+    manifest = sceneSchema.parse(JSON.parse(info.manifestJson));
   } catch (err) {
-    console.warn(`[scenes] failed to load ${baseDir}:`, err);
+    console.warn(`[scenes] invalid manifest in ${info.baseDir}:`, err);
     return null;
   }
+
+  for (const p of collectManifestAssetPaths(manifest)) {
+    if (!isSafeRelativeAsset(p)) {
+      console.warn(`[scenes] rejected ${info.baseDir}: unsafe path ${JSON.stringify(p)}`);
+      return null;
+    }
+  }
+
+  return {
+    id: manifest.id,
+    manifest,
+    baseDir: info.baseDir,
+    assetUrl: (rel) => `${platform.toAssetUrl(`${info.baseDir}/${rel}`)}?v=${LAUNCH_TOKEN}`,
+  };
 }
