@@ -1,0 +1,22 @@
+{
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "identifier": "default",
+  "description": "Default window + plugin permissions for PomoBuddy",
+  "windows": ["main"],
+  "permissions": [
+    "core:default",
+    "core:window:allow-set-size",
+    "core:window:allow-set-always-on-top",
+    "core:window:allow-request-user-attention",
+    "core:app:allow-name",
+    "notification:default",
+    "notification:allow-is-permission-granted",
+    "notification:allow-request-permission",
+    "notification:allow-notify",
+    "fs:allow-app-read",
+    "fs:allow-app-write",
+    "fs:allow-resource-read",
+    "fs:scope-app-recursive",
+    "fs:scope-resource-recursive"
+  ]
+}
